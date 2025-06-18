@@ -29,7 +29,6 @@ import {
   Select,
   ListItem,
   CircularProgress,
-  Backdrop,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -177,19 +176,6 @@ const Employees = () => {
 
   return (
     <Box>
-      {/* Syncing Backdrop */}
-      <Backdrop
-        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-        open={syncing}
-      >
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <CircularProgress color="inherit" />
-          <Typography variant="h6" sx={{ mt: 2 }}>
-            Syncing...
-          </Typography>
-        </Box>
-      </Backdrop>
-
       {/* Header Section */}
       <Paper 
         elevation={0}
@@ -223,9 +209,9 @@ const Employees = () => {
           <Button
             variant="contained"
             size={isMobile ? "medium" : "large"}
-            startIcon={syncing ? <SyncIcon /> : <AddIcon />}
+            startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
             onClick={() => handleOpenDialog()}
-            disabled={syncing || !isInitialized}
+            disabled={submitting}
             sx={{
               background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
               boxShadow: '0 4px 15px rgba(25, 118, 210, 0.3)',
@@ -237,7 +223,7 @@ const Employees = () => {
               transition: 'all 0.3s ease',
             }}
           >
-            Add Employee
+            {submitting ? 'Adding...' : 'Add Employee'}
           </Button>
         </Box>
       </Paper>
@@ -351,7 +337,7 @@ const Employees = () => {
               size="large"
               startIcon={<AddIcon />}
               onClick={() => handleOpenDialog()}
-              disabled={syncing || !isInitialized}
+              disabled={submitting}
               sx={{
                 background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
                 '&:hover': {
@@ -428,7 +414,6 @@ const Employees = () => {
                           e.stopPropagation();
                           handleMenuOpen(e, employee);
                         }}
-                        disabled={syncing}
                         sx={{ 
                           backgroundColor: 'rgba(0,0,0,0.04)',
                           '&:hover': { backgroundColor: 'rgba(0,0,0,0.08)' }
@@ -498,7 +483,7 @@ const Employees = () => {
           color="primary"
           aria-label="add employee"
           onClick={() => handleOpenDialog()}
-          disabled={syncing || !isInitialized}
+          disabled={submitting}
           sx={{
             position: 'fixed',
             bottom: 80,
@@ -509,7 +494,7 @@ const Employees = () => {
             },
           }}
         >
-          {syncing ? <SyncIcon /> : <AddIcon />}
+          {submitting ? <CircularProgress size={24} color="inherit" /> : <AddIcon />}
         </Fab>
       )}
 
@@ -574,25 +559,25 @@ const Employees = () => {
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
-        <MenuItem onClick={() => handleViewDetails(selectedEmployeeForMenu)} disabled={syncing}>
+        <MenuItem onClick={() => handleViewDetails(selectedEmployeeForMenu)}>
           <ListItemIcon>
             <EditIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>View Details</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleAddWorkDay(selectedEmployeeForMenu)} disabled={syncing}>
+        <MenuItem onClick={() => handleAddWorkDay(selectedEmployeeForMenu)}>
           <ListItemIcon>
             <WorkIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Add Work Day</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleAddPayment(selectedEmployeeForMenu)} disabled={syncing}>
+        <MenuItem onClick={() => handleAddPayment(selectedEmployeeForMenu)}>
           <ListItemIcon>
             <PaymentIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Add Payment</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleOpenDialog(selectedEmployeeForMenu)} disabled={syncing}>
+        <MenuItem onClick={() => handleOpenDialog(selectedEmployeeForMenu)}>
           <ListItemIcon>
             <EditIcon fontSize="small" />
           </ListItemIcon>
@@ -600,7 +585,6 @@ const Employees = () => {
         </MenuItem>
         <MenuItem 
           onClick={() => handleDelete(selectedEmployeeForMenu)}
-          disabled={syncing}
           sx={{ color: 'error.main' }}
         >
           <ListItemIcon>

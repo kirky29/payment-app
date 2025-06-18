@@ -8,7 +8,8 @@ import {
   getDocs, 
   query, 
   where,
-  orderBy
+  orderBy,
+  onSnapshot
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -35,14 +36,32 @@ const appReducer = (state, action) => {
       return { ...state, syncing: action.payload };
     case 'SET_ERROR':
       return { ...state, error: action.payload };
-    case 'SET_EMPLOYEES':
-      // Always completely replace employees array - no merging, no duplicates possible
-      console.log('[Context] Setting employees:', action.payload.length, 'employees');
-      return { ...state, employees: action.payload };
-    case 'SET_WORK_DAYS':
-      return { ...state, workDays: action.payload };
-    case 'SET_PAYMENTS':
-      return { ...state, payments: action.payload };
+    case 'SET_EMPLOYEES': {
+      // Deduplicate by ID and sort by creation date (newest first)
+      const uniqueEmployees = Array.from(
+        new Map(action.payload.map(emp => [emp.id, emp])).values()
+      ).sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
+        const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
+        return dateB - dateA;
+      });
+      console.log('[Context] Setting employees (deduplicated):', uniqueEmployees.length, 'employees');
+      return { ...state, employees: uniqueEmployees };
+    }
+    case 'SET_WORK_DAYS': {
+      // Deduplicate work days as well
+      const uniqueWorkDays = Array.from(
+        new Map(action.payload.map(day => [day.id, day])).values()
+      );
+      return { ...state, workDays: uniqueWorkDays };
+    }
+    case 'SET_PAYMENTS': {
+      // Deduplicate payments as well
+      const uniquePayments = Array.from(
+        new Map(action.payload.map(payment => [payment.id, payment])).values()
+      );
+      return { ...state, payments: uniquePayments };
+    }
     case 'UPDATE_SETTINGS':
       return { ...state, settings: { ...state.settings, ...action.payload } };
     case 'RESET_STATE':
@@ -62,54 +81,7 @@ export const AppProvider = ({ children, currentUser }) => {
     return collection(db, `users/${currentUser.uid}/${collectionName}`);
   };
 
-  // Fetch all data from Firebase
-  const fetchAllData = async () => {
-    if (!currentUser) return;
-    
-    try {
-      console.log('[Context] Fetching all data for user:', currentUser.uid);
-      dispatch({ type: 'SET_LOADING', payload: true });
-
-      // Fetch employees
-      const employeesRef = getUserCollection('employees');
-      const employeesSnapshot = await getDocs(query(employeesRef, orderBy('createdAt', 'desc')));
-      const employees = employeesSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      console.log('[Context] Fetched employees:', employees.length);
-
-      // Fetch work days
-      const workDaysRef = getUserCollection('workDays');
-      const workDaysSnapshot = await getDocs(query(workDaysRef, orderBy('createdAt', 'desc')));
-      const workDays = workDaysSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      // Fetch payments
-      const paymentsRef = getUserCollection('payments');
-      const paymentsSnapshot = await getDocs(query(paymentsRef, orderBy('createdAt', 'desc')));
-      const payments = paymentsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      // Update state with fetched data
-      dispatch({ type: 'SET_EMPLOYEES', payload: employees });
-      dispatch({ type: 'SET_WORK_DAYS', payload: workDays });
-      dispatch({ type: 'SET_PAYMENTS', payload: payments });
-      
-      setIsInitialized(true);
-    } catch (error) {
-      console.error('[Context] Error fetching data:', error);
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to load data' });
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
-    }
-  };
-
-  // Initial data load
+  // Real-time listeners for automatic syncing
   useEffect(() => {
     if (!currentUser) {
       dispatch({ type: 'RESET_STATE' });
@@ -117,17 +89,99 @@ export const AppProvider = ({ children, currentUser }) => {
       return;
     }
 
-    fetchAllData();
+    console.log('[Context] Setting up real-time listeners for user:', currentUser.uid);
+    dispatch({ type: 'SET_LOADING', payload: true });
+
+    let unsubscribeEmployees, unsubscribeWorkDays, unsubscribePayments;
+
+    const setupListeners = async () => {
+      try {
+        // Employees listener
+        const employeesRef = getUserCollection('employees');
+        if (employeesRef) {
+          unsubscribeEmployees = onSnapshot(
+            query(employeesRef, orderBy('createdAt', 'desc')),
+            (snapshot) => {
+              const employees = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+              }));
+              console.log('[Firebase] Employees updated:', employees.length, 'employees');
+              dispatch({ type: 'SET_EMPLOYEES', payload: employees });
+            },
+            (error) => {
+              console.error('[Firebase] Employees listener error:', error);
+              dispatch({ type: 'SET_ERROR', payload: 'Failed to sync employees' });
+            }
+          );
+        }
+
+        // Work days listener
+        const workDaysRef = getUserCollection('workDays');
+        if (workDaysRef) {
+          unsubscribeWorkDays = onSnapshot(
+            query(workDaysRef, orderBy('createdAt', 'desc')),
+            (snapshot) => {
+              const workDays = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+              }));
+              dispatch({ type: 'SET_WORK_DAYS', payload: workDays });
+            },
+            (error) => {
+              console.error('[Firebase] Work days listener error:', error);
+            }
+          );
+        }
+
+        // Payments listener
+        const paymentsRef = getUserCollection('payments');
+        if (paymentsRef) {
+          unsubscribePayments = onSnapshot(
+            query(paymentsRef, orderBy('createdAt', 'desc')),
+            (snapshot) => {
+              const payments = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+              }));
+              dispatch({ type: 'SET_PAYMENTS', payload: payments });
+            },
+            (error) => {
+              console.error('[Firebase] Payments listener error:', error);
+            }
+          );
+        }
+
+        // Mark as initialized after a short delay to ensure listeners are active
+        setTimeout(() => {
+          setIsInitialized(true);
+          dispatch({ type: 'SET_LOADING', payload: false });
+        }, 1000);
+
+      } catch (error) {
+        console.error('[Firebase] Setup error:', error);
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to connect to database' });
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    };
+
+    setupListeners();
+
+    return () => {
+      if (unsubscribeEmployees) unsubscribeEmployees();
+      if (unsubscribeWorkDays) unsubscribeWorkDays();
+      if (unsubscribePayments) unsubscribePayments();
+    };
   }, [currentUser]);
 
-  // Employee actions with optimistic updates
+  // Employee actions - NO optimistic updates, only Firebase writes
   const addEmployee = async (employeeData) => {
     if (!currentUser || !isInitialized) return;
     
     try {
       dispatch({ type: 'SET_SYNCING', payload: true });
       
-      // Add to Firebase first
+      // Only write to Firebase - let the listener update the state
       const employeesRef = getUserCollection('employees');
       const docRef = await addDoc(employeesRef, {
         ...employeeData,
@@ -135,16 +189,17 @@ export const AppProvider = ({ children, currentUser }) => {
       });
       
       console.log('[Context] Employee added to Firebase:', docRef.id);
-      
-      // Fetch fresh data to ensure consistency
-      await fetchAllData();
+      // Don't update local state - the onSnapshot listener will handle it
       
     } catch (error) {
       console.error('[Context] Add employee error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to add employee' });
       throw error;
     } finally {
-      dispatch({ type: 'SET_SYNCING', payload: false });
+      // Clear syncing after a delay to show user feedback
+      setTimeout(() => {
+        dispatch({ type: 'SET_SYNCING', payload: false });
+      }, 500);
     }
   };
 
@@ -159,15 +214,14 @@ export const AppProvider = ({ children, currentUser }) => {
       
       console.log('[Context] Employee updated in Firebase:', id);
       
-      // Fetch fresh data to ensure consistency
-      await fetchAllData();
-      
     } catch (error) {
       console.error('[Context] Update employee error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update employee' });
       throw error;
     } finally {
-      dispatch({ type: 'SET_SYNCING', payload: false });
+      setTimeout(() => {
+        dispatch({ type: 'SET_SYNCING', payload: false });
+      }, 500);
     }
   };
 
@@ -198,15 +252,14 @@ export const AppProvider = ({ children, currentUser }) => {
       
       console.log('[Context] Employee and related data deleted from Firebase');
       
-      // Fetch fresh data to ensure consistency
-      await fetchAllData();
-      
     } catch (error) {
       console.error('[Context] Delete employee error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to delete employee' });
       throw error;
     } finally {
-      dispatch({ type: 'SET_SYNCING', payload: false });
+      setTimeout(() => {
+        dispatch({ type: 'SET_SYNCING', payload: false });
+      }, 500);
     }
   };
 
@@ -225,15 +278,14 @@ export const AppProvider = ({ children, currentUser }) => {
       
       console.log('[Context] Work day added to Firebase');
       
-      // Fetch fresh data to ensure consistency
-      await fetchAllData();
-      
     } catch (error) {
       console.error('[Context] Add work day error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to add work day' });
       throw error;
     } finally {
-      dispatch({ type: 'SET_SYNCING', payload: false });
+      setTimeout(() => {
+        dispatch({ type: 'SET_SYNCING', payload: false });
+      }, 300);
     }
   };
 
@@ -248,15 +300,14 @@ export const AppProvider = ({ children, currentUser }) => {
       
       console.log('[Context] Work day updated in Firebase');
       
-      // Fetch fresh data to ensure consistency
-      await fetchAllData();
-      
     } catch (error) {
       console.error('[Context] Update work day error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update work day' });
       throw error;
     } finally {
-      dispatch({ type: 'SET_SYNCING', payload: false });
+      setTimeout(() => {
+        dispatch({ type: 'SET_SYNCING', payload: false });
+      }, 300);
     }
   };
 
@@ -271,15 +322,14 @@ export const AppProvider = ({ children, currentUser }) => {
       
       console.log('[Context] Work day deleted from Firebase');
       
-      // Fetch fresh data to ensure consistency
-      await fetchAllData();
-      
     } catch (error) {
       console.error('[Context] Delete work day error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to delete work day' });
       throw error;
     } finally {
-      dispatch({ type: 'SET_SYNCING', payload: false });
+      setTimeout(() => {
+        dispatch({ type: 'SET_SYNCING', payload: false });
+      }, 300);
     }
   };
 
@@ -298,15 +348,14 @@ export const AppProvider = ({ children, currentUser }) => {
       
       console.log('[Context] Payment added to Firebase');
       
-      // Fetch fresh data to ensure consistency
-      await fetchAllData();
-      
     } catch (error) {
       console.error('[Context] Add payment error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to add payment' });
       throw error;
     } finally {
-      dispatch({ type: 'SET_SYNCING', payload: false });
+      setTimeout(() => {
+        dispatch({ type: 'SET_SYNCING', payload: false });
+      }, 300);
     }
   };
 
@@ -321,15 +370,14 @@ export const AppProvider = ({ children, currentUser }) => {
       
       console.log('[Context] Payment updated in Firebase');
       
-      // Fetch fresh data to ensure consistency
-      await fetchAllData();
-      
     } catch (error) {
       console.error('[Context] Update payment error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update payment' });
       throw error;
     } finally {
-      dispatch({ type: 'SET_SYNCING', payload: false });
+      setTimeout(() => {
+        dispatch({ type: 'SET_SYNCING', payload: false });
+      }, 300);
     }
   };
 
@@ -344,15 +392,14 @@ export const AppProvider = ({ children, currentUser }) => {
       
       console.log('[Context] Payment deleted from Firebase');
       
-      // Fetch fresh data to ensure consistency
-      await fetchAllData();
-      
     } catch (error) {
       console.error('[Context] Delete payment error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to delete payment' });
       throw error;
     } finally {
-      dispatch({ type: 'SET_SYNCING', payload: false });
+      setTimeout(() => {
+        dispatch({ type: 'SET_SYNCING', payload: false });
+      }, 300);
     }
   };
 
@@ -413,7 +460,6 @@ export const AppProvider = ({ children, currentUser }) => {
     getEmployeePayments,
     calculateEmployeeTotals,
     updateSettings,
-    refreshData: fetchAllData, // Expose refresh function
   };
 
   return (
