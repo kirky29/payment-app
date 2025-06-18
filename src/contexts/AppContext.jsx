@@ -103,12 +103,20 @@ export const AppProvider = ({ children, currentUser }) => {
 
   // Load data from Firebase
   useEffect(() => {
+    console.log('AppContext: currentUser changed:', currentUser ? `User ${currentUser.uid}` : 'No user');
+    
     if (!currentUser) {
       // If no user, load from default localStorage
       try {
         const localEmployees = JSON.parse(localStorage.getItem('employees') || '[]');
         const localWorkDays = JSON.parse(localStorage.getItem('workDays') || '[]');
         const localPayments = JSON.parse(localStorage.getItem('payments') || '[]');
+        
+        console.log('AppContext: Loading from default localStorage:', {
+          employees: localEmployees.length,
+          workDays: localWorkDays.length,
+          payments: localPayments.length
+        });
         
         dispatch({ type: 'SET_EMPLOYEES', payload: localEmployees });
         dispatch({ type: 'SET_WORK_DAYS', payload: localWorkDays });
@@ -128,6 +136,13 @@ export const AppProvider = ({ children, currentUser }) => {
         const localPayments = JSON.parse(localStorage.getItem(getStorageKey('payments')) || '[]');
         const localSettings = JSON.parse(localStorage.getItem(getStorageKey('settings')) || '{"currency": "USD", "theme": "light"}');
         
+        console.log('AppContext: Loading from user localStorage:', {
+          userId: currentUser.uid,
+          employees: localEmployees.length,
+          workDays: localWorkDays.length,
+          payments: localPayments.length
+        });
+        
         dispatch({ type: 'SET_EMPLOYEES', payload: localEmployees });
         dispatch({ type: 'SET_WORK_DAYS', payload: localWorkDays });
         dispatch({ type: 'SET_PAYMENTS', payload: localPayments });
@@ -138,11 +153,19 @@ export const AppProvider = ({ children, currentUser }) => {
     };
 
     const setupFirebaseListeners = () => {
+      console.log('AppContext: Setting up Firebase listeners for user:', currentUser.uid);
       try {
         const employeesCollection = getUserCollection('employees');
         const workDaysCollection = getUserCollection('workDays');
         const paymentsCollection = getUserCollection('payments');
         const settingsCollection = getUserCollection('settings');
+
+        console.log('AppContext: Firebase collections:', {
+          employees: employeesCollection ? '✅ Available' : '❌ Not available',
+          workDays: workDaysCollection ? '✅ Available' : '❌ Not available',
+          payments: paymentsCollection ? '✅ Available' : '❌ Not available',
+          settings: settingsCollection ? '✅ Available' : '❌ Not available'
+        });
 
         if (employeesCollection) {
           unsubscribeEmployees = onSnapshot(
