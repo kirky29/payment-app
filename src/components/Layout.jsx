@@ -77,6 +77,11 @@ const Layout = ({ children }) => {
         sx={{
           background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
           borderBottom: '1px solid rgba(255,255,255,0.1)',
+          // On desktop, make header start after sidebar
+          ...(isMobile ? {} : {
+            ml: '240px',
+            width: 'calc(100% - 240px)',
+          }),
         }}
       >
         <Toolbar>
@@ -92,13 +97,6 @@ const Layout = ({ children }) => {
           >
             💰 Money Tracker
           </Typography>
-          
-          {/* Sync Status */}
-          {currentUser && (
-            <Box sx={{ mr: 2 }}>
-              <SyncStatus />
-            </Box>
-          )}
           
           {/* User Menu */}
           {currentUser && (
@@ -145,26 +143,123 @@ const Layout = ({ children }) => {
         </Toolbar>
       </AppBar>
 
+      {/* Side Navigation - Desktop Only */}
+      {!isMobile && (
+        <Paper 
+          sx={{ 
+            position: 'fixed', 
+            left: 0, 
+            top: 0, 
+            bottom: 0,
+            width: 240,
+            zIndex: 1100, // Higher than AppBar to prevent overlap
+            borderRadius: 0,
+            borderRight: '1px solid rgba(0,0,0,0.1)',
+            display: 'flex',
+            flexDirection: 'column',
+            background: '#fff',
+          }} 
+          elevation={4}
+        >
+          <Box sx={{ p: 2, mt: 1 }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'text.secondary' }}>
+              Navigation
+            </Typography>
+          </Box>
+          <Box sx={{ flexGrow: 1 }}>
+            {[
+              { label: 'Employees', icon: <PeopleIcon />, path: '/employees' },
+              { label: 'Calendar', icon: <CalendarIcon />, path: '/calendar' },
+              { label: 'Reports', icon: <ReportsIcon />, path: '/reports' },
+              { label: 'Settings', icon: <SettingsIcon />, path: '/settings' },
+            ].map((item, index) => (
+              <Box
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  px: 3,
+                  py: 2,
+                  cursor: 'pointer',
+                  backgroundColor: location.pathname === item.path ? 'primary.main' : 'transparent',
+                  color: location.pathname === item.path ? 'white' : 'text.primary',
+                  '&:hover': {
+                    backgroundColor: location.pathname === item.path ? 'primary.dark' : 'action.hover',
+                  },
+                  transition: 'all 0.2s ease-in-out',
+                  borderLeft: location.pathname === item.path ? '4px solid white' : '4px solid transparent',
+                }}
+              >
+                <Box sx={{ mr: 2, display: 'flex', alignItems: 'center' }}>
+                  {item.icon}
+                </Box>
+                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                  {item.label}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+          
+          {/* Sync Status - Above logout */}
+          {currentUser && (
+            <Box sx={{ px: 2, pb: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                <SyncStatus />
+              </Box>
+            </Box>
+          )}
+          
+          {/* Logout button in sidebar */}
+          {currentUser && (
+            <Box sx={{ p: 2, borderTop: '1px solid rgba(0,0,0,0.1)' }}>
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<LogoutIcon />}
+                onClick={handleLogout}
+                sx={{
+                  color: 'error.main',
+                  borderColor: 'error.main',
+                  '&:hover': {
+                    backgroundColor: 'error.main',
+                    color: 'white',
+                  },
+                }}
+              >
+                Logout
+              </Button>
+            </Box>
+          )}
+        </Paper>
+      )}
+
       {/* Main Content */}
-      <Container 
-        maxWidth="xl" 
+      <Box
+        component="main"
         sx={{ 
-          flexGrow: 1, 
-          py: { xs: 2, sm: 3, md: 4 },
-          px: { xs: 2, sm: 3, md: 4 },
-          pb: isMobile ? 8 : 4,
-          ml: isMobile ? 0 : '240px', // Account for sidebar width
-          width: isMobile ? '100%' : 'calc(100% - 240px)',
+          flexGrow: 1,
+          ml: isMobile ? 0 : '240px',
+          transition: 'margin 0.3s',
+          minHeight: 'calc(100vh - 64px)', // Account for header height
         }}
       >
-        <Box sx={{ 
-          maxWidth: '1400px', 
-          mx: 'auto',
-          minHeight: 'calc(100vh - 200px)',
-        }}>
-          {children}
-        </Box>
-      </Container>
+        <Container 
+          maxWidth="xl" 
+          sx={{ 
+            py: { xs: 2, sm: 3, md: 4 },
+            px: { xs: 2, sm: 3, md: 4 },
+            pb: isMobile ? 8 : 4,
+          }}
+        >
+          <Box sx={{ 
+            maxWidth: '1400px', 
+            mx: 'auto',
+          }}>
+            {children}
+          </Box>
+        </Container>
+      </Box>
 
       {/* Bottom Navigation - Mobile Only */}
       {isMobile && (
@@ -211,88 +306,6 @@ const Layout = ({ children }) => {
               icon={<SettingsIcon />}
             />
           </BottomNavigation>
-        </Paper>
-      )}
-
-      {/* Side Navigation - Desktop Only */}
-      {!isMobile && (
-        <Paper 
-          sx={{ 
-            position: 'fixed', 
-            left: 0, 
-            top: 0, 
-            bottom: 0,
-            width: 240,
-            zIndex: 1000,
-            borderRadius: 0,
-            borderRight: '1px solid rgba(0,0,0,0.1)',
-            display: 'flex',
-            flexDirection: 'column',
-            mt: '64px', // Account for AppBar height
-          }} 
-          elevation={4}
-        >
-          <Box sx={{ p: 2 }}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'text.secondary' }}>
-              Navigation
-            </Typography>
-          </Box>
-          <Box sx={{ flexGrow: 1 }}>
-            {[
-              { label: 'Employees', icon: <PeopleIcon />, path: '/employees' },
-              { label: 'Calendar', icon: <CalendarIcon />, path: '/calendar' },
-              { label: 'Reports', icon: <ReportsIcon />, path: '/reports' },
-              { label: 'Settings', icon: <SettingsIcon />, path: '/settings' },
-            ].map((item, index) => (
-              <Box
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  px: 3,
-                  py: 2,
-                  cursor: 'pointer',
-                  backgroundColor: location.pathname === item.path ? 'primary.main' : 'transparent',
-                  color: location.pathname === item.path ? 'white' : 'text.primary',
-                  '&:hover': {
-                    backgroundColor: location.pathname === item.path ? 'primary.dark' : 'action.hover',
-                  },
-                  transition: 'all 0.2s ease-in-out',
-                  borderLeft: location.pathname === item.path ? '4px solid white' : '4px solid transparent',
-                }}
-              >
-                <Box sx={{ mr: 2, display: 'flex', alignItems: 'center' }}>
-                  {item.icon}
-                </Box>
-                <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {item.label}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-          
-          {/* Logout button in sidebar */}
-          {currentUser && (
-            <Box sx={{ p: 2, borderTop: '1px solid rgba(0,0,0,0.1)' }}>
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<LogoutIcon />}
-                onClick={handleLogout}
-                sx={{
-                  color: 'error.main',
-                  borderColor: 'error.main',
-                  '&:hover': {
-                    backgroundColor: 'error.main',
-                    color: 'white',
-                  },
-                }}
-              >
-                Logout
-              </Button>
-            </Box>
-          )}
         </Paper>
       )}
     </Box>
