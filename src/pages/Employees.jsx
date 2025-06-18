@@ -28,6 +28,8 @@ import {
   InputLabel,
   Select,
   ListItem,
+  CircularProgress,
+  Backdrop,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -40,18 +42,31 @@ import {
   TrendingUp as TrendingUpIcon,
   TrendingDown as TrendingDownIcon,
   Visibility as VisibilityIcon,
+  Sync as SyncIcon,
 } from '@mui/icons-material';
 import { useApp } from '../contexts/AppContext';
 import EmployeeDetails from '../components/EmployeeDetails';
 import { formatCurrency } from '../utils/currency';
 
 const Employees = () => {
-  const { employees, addEmployee, updateEmployee, deleteEmployee, calculateEmployeeTotals, settings } = useApp();
+  const { 
+    employees, 
+    addEmployee, 
+    updateEmployee, 
+    deleteEmployee, 
+    calculateEmployeeTotals, 
+    settings, 
+    loading, 
+    syncing,
+    isInitialized 
+  } = useApp();
+  
   const [openDialog, setOpenDialog] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedEmployeeForMenu, setSelectedEmployeeForMenu] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
@@ -82,20 +97,29 @@ const Employees = () => {
   };
 
   const handleSubmit = async () => {
-    if (!formData.name || !formData.dailyRate) return;
+    if (!formData.name || !formData.dailyRate || submitting || !isInitialized) return;
 
-    const employeeData = {
-      name: formData.name.trim(),
-      dailyRate: parseFloat(formData.dailyRate),
-    };
+    try {
+      setSubmitting(true);
+      
+      const employeeData = {
+        name: formData.name.trim(),
+        dailyRate: parseFloat(formData.dailyRate),
+      };
 
-    if (editingEmployee) {
-      await updateEmployee(editingEmployee.id, employeeData);
-    } else {
-      await addEmployee(employeeData);
+      if (editingEmployee) {
+        await updateEmployee(editingEmployee.id, employeeData);
+      } else {
+        await addEmployee(employeeData);
+      }
+
+      handleCloseDialog();
+    } catch (error) {
+      console.error('Submit error:', error);
+      // Don't close dialog on error, let user retry
+    } finally {
+      setSubmitting(false);
     }
-
-    handleCloseDialog();
   };
 
   const handleDelete = async (employee) => {
@@ -139,8 +163,33 @@ const Employees = () => {
     return 'warning';
   };
 
+  // Show loading state while initializing
+  if (!isInitialized) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <CircularProgress size={40} />
+        <Typography variant="h6" sx={{ ml: 2 }}>
+          Loading employees...
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
     <Box>
+      {/* Syncing Backdrop */}
+      <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={syncing}
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <CircularProgress color="inherit" />
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            Syncing...
+          </Typography>
+        </Box>
+      </Backdrop>
+
       {/* Header Section */}
       <Paper 
         elevation={0}
@@ -174,8 +223,9 @@ const Employees = () => {
           <Button
             variant="contained"
             size={isMobile ? "medium" : "large"}
-            startIcon={<AddIcon />}
+            startIcon={syncing ? <SyncIcon /> : <AddIcon />}
             onClick={() => handleOpenDialog()}
+            disabled={syncing || !isInitialized}
             sx={{
               background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
               boxShadow: '0 4px 15px rgba(25, 118, 210, 0.3)',
@@ -301,6 +351,7 @@ const Employees = () => {
               size="large"
               startIcon={<AddIcon />}
               onClick={() => handleOpenDialog()}
+              disabled={syncing || !isInitialized}
               sx={{
                 background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
                 '&:hover': {
@@ -377,6 +428,7 @@ const Employees = () => {
                           e.stopPropagation();
                           handleMenuOpen(e, employee);
                         }}
+                        disabled={syncing}
                         sx={{ 
                           backgroundColor: 'rgba(0,0,0,0.04)',
                           '&:hover': { backgroundColor: 'rgba(0,0,0,0.08)' }
@@ -446,6 +498,7 @@ const Employees = () => {
           color="primary"
           aria-label="add employee"
           onClick={() => handleOpenDialog()}
+          disabled={syncing || !isInitialized}
           sx={{
             position: 'fixed',
             bottom: 80,
@@ -456,12 +509,12 @@ const Employees = () => {
             },
           }}
         >
-          <AddIcon />
+          {syncing ? <SyncIcon /> : <AddIcon />}
         </Fab>
       )}
 
       {/* Add/Edit Employee Dialog */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth disableEnforceFocus>
         <DialogTitle sx={{ pb: 1 }}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
             {editingEmployee ? 'Edit Employee' : 'Add New Employee'}
@@ -476,6 +529,7 @@ const Employees = () => {
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               margin="normal"
               required
+              disabled={submitting}
               sx={{ mb: 2 }}
             />
             <TextField
@@ -486,6 +540,7 @@ const Employees = () => {
               onChange={(e) => setFormData({ ...formData, dailyRate: e.target.value })}
               margin="normal"
               required
+              disabled={submitting}
               InputProps={{
                 startAdornment: <Typography variant="body2" sx={{ mr: 1 }}>$</Typography>,
               }}
@@ -493,12 +548,14 @@ const Employees = () => {
           </Box>
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 1 }}>
-          <Button onClick={handleCloseDialog} variant="outlined">
+          <Button onClick={handleCloseDialog} variant="outlined" disabled={submitting}>
             Cancel
           </Button>
           <Button 
             onClick={handleSubmit} 
             variant="contained"
+            disabled={submitting || loading || !isInitialized}
+            startIcon={submitting ? <CircularProgress size={16} /> : null}
             sx={{
               background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
               '&:hover': {
@@ -506,7 +563,7 @@ const Employees = () => {
               },
             }}
           >
-            {editingEmployee ? 'Update' : 'Add'}
+            {submitting ? 'Processing...' : (editingEmployee ? 'Update' : 'Add')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -517,25 +574,25 @@ const Employees = () => {
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
-        <MenuItem onClick={() => handleViewDetails(selectedEmployeeForMenu)}>
+        <MenuItem onClick={() => handleViewDetails(selectedEmployeeForMenu)} disabled={syncing}>
           <ListItemIcon>
             <EditIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>View Details</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleAddWorkDay(selectedEmployeeForMenu)}>
+        <MenuItem onClick={() => handleAddWorkDay(selectedEmployeeForMenu)} disabled={syncing}>
           <ListItemIcon>
             <WorkIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Add Work Day</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleAddPayment(selectedEmployeeForMenu)}>
+        <MenuItem onClick={() => handleAddPayment(selectedEmployeeForMenu)} disabled={syncing}>
           <ListItemIcon>
             <PaymentIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Add Payment</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleOpenDialog(selectedEmployeeForMenu)}>
+        <MenuItem onClick={() => handleOpenDialog(selectedEmployeeForMenu)} disabled={syncing}>
           <ListItemIcon>
             <EditIcon fontSize="small" />
           </ListItemIcon>
@@ -543,6 +600,7 @@ const Employees = () => {
         </MenuItem>
         <MenuItem 
           onClick={() => handleDelete(selectedEmployeeForMenu)}
+          disabled={syncing}
           sx={{ color: 'error.main' }}
         >
           <ListItemIcon>

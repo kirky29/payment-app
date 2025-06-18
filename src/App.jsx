@@ -13,6 +13,7 @@ import Employees from './pages/Employees';
 import Calendar from './pages/Calendar';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import SyncStatus from './components/SyncStatus';
 import './App.css';
 
 const theme = createTheme({
@@ -137,6 +138,7 @@ const AppContent = () => {
           element={
             <ProtectedRoute>
               <AppProvider currentUser={currentUser}>
+                <SyncStatus />
                 <Layout>
                   <Routes>
                     <Route path="/" element={<Employees />} />

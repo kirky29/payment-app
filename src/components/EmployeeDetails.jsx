@@ -542,7 +542,7 @@ const EmployeeDetails = ({ employee, open, onClose }) => {
       </Dialog>
 
       {/* Add/Edit Work Day Dialog */}
-      <Dialog open={openWorkDayDialog} onClose={() => setOpenWorkDayDialog(false)} maxWidth="sm" fullWidth>
+      <Dialog open={openWorkDayDialog} onClose={() => setOpenWorkDayDialog(false)} maxWidth="sm" fullWidth disableEnforceFocus>
         <DialogTitle sx={{ pb: 1 }}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
             {editingWorkDay ? 'Edit Work Day' : 'Add Work Day'}
@@ -601,7 +601,7 @@ const EmployeeDetails = ({ employee, open, onClose }) => {
       </Dialog>
 
       {/* Add/Edit Payment Dialog */}
-      <Dialog open={openPaymentDialog} onClose={() => setOpenPaymentDialog(false)} maxWidth="sm" fullWidth>
+      <Dialog open={openPaymentDialog} onClose={() => setOpenPaymentDialog(false)} maxWidth="sm" fullWidth disableEnforceFocus>
         <DialogTitle sx={{ pb: 1 }}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
             {editingPayment ? 'Edit Payment' : 'Add Payment'}
@@ -663,7 +663,7 @@ const EmployeeDetails = ({ employee, open, onClose }) => {
       </Dialog>
 
       {/* Edit Employee Dialog */}
-      <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)} maxWidth="sm" fullWidth>
+      <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)} maxWidth="sm" fullWidth disableEnforceFocus>
         <DialogTitle sx={{ pb: 1 }}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
             Edit Employee
