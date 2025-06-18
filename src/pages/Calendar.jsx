@@ -42,10 +42,21 @@ import {
 } from '@mui/icons-material';
 import { useApp } from '../contexts/AppContext';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, isSameMonth } from 'date-fns';
-import { formatCurrency } from '../utils/currency';
+import { formatCurrency, getCurrencySymbol } from '../utils/currency';
 
 const Calendar = () => {
-  const { employees, workDays, payments, addWorkDay, addPayment, deleteWorkDay, deletePayment, settings } = useApp();
+  const { 
+    employees, 
+    workDays, 
+    payments, 
+    addWorkDay, 
+    addPayment, 
+    deleteWorkDay, 
+    deletePayment, 
+    markWorkDayAsPaid,
+    unmarkWorkDayAsPaid,
+    settings 
+  } = useApp();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [openWorkDayDialog, setOpenWorkDayDialog] = useState(false);
@@ -60,7 +71,7 @@ const Calendar = () => {
   const [workDayForm, setWorkDayForm] = useState({
     employeeId: '',
     date: format(new Date(), 'yyyy-MM-dd'),
-    hours: '8',
+    dailyRate: '',
     notes: '',
   });
 
@@ -99,12 +110,12 @@ const Calendar = () => {
   };
 
   const handleWorkDaySubmit = async () => {
-    if (!workDayForm.employeeId || !workDayForm.date || !workDayForm.hours) return;
+    if (!workDayForm.employeeId || !workDayForm.date || !workDayForm.dailyRate) return;
 
     const workDayData = {
       employeeId: workDayForm.employeeId,
       date: workDayForm.date,
-      hours: parseFloat(workDayForm.hours),
+      dailyRate: parseFloat(workDayForm.dailyRate),
       notes: workDayForm.notes.trim(),
     };
 
@@ -121,7 +132,7 @@ const Calendar = () => {
     setWorkDayForm({
       employeeId: '',
       date: format(new Date(), 'yyyy-MM-dd'),
-      hours: '8',
+      dailyRate: '',
       notes: '',
     });
   };
@@ -159,7 +170,7 @@ const Calendar = () => {
     setWorkDayForm({
       employeeId: workDay.employeeId,
       date: workDay.date,
-      hours: workDay.hours.toString(),
+      dailyRate: workDay.dailyRate?.toString() || (workDay.hours ? (workDay.hours * (getEmployeeById(workDay.employeeId)?.dailyRate || 0)).toString() : ''),
       notes: workDay.notes || '',
     });
     setOpenWorkDayDialog(true);
@@ -208,14 +219,18 @@ const Calendar = () => {
       return isSameMonth(paymentDate, currentDate);
     });
 
-    const totalHours = monthWorkDays.reduce((sum, day) => sum + day.hours, 0);
+    const totalDays = monthWorkDays.length;
     const totalPayments = monthPayments.reduce((sum, payment) => sum + payment.amount, 0);
     const totalOwed = monthWorkDays.reduce((sum, day) => {
       const employee = getEmployeeById(day.employeeId);
-      return sum + (day.hours * (employee?.dailyRate || 0));
+      if (day.dailyRate !== undefined) {
+        return sum + (day.dailyRate || 0);
+      } else {
+        return sum + ((day.hours || 0) * (employee?.dailyRate || 0));
+      }
     }, 0);
 
-    return { totalHours, totalPayments, totalOwed, workDaysCount: monthWorkDays.length, paymentsCount: monthPayments.length };
+    return { totalDays, totalPayments, totalOwed, workDaysCount: monthWorkDays.length, paymentsCount: monthPayments.length };
   };
 
   const monthStats = getMonthStats();
@@ -337,10 +352,10 @@ const Calendar = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
                   <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                    {monthStats.totalHours}
+                    {monthStats.totalDays}
                   </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    Total Hours
+                    Total Days
                   </Typography>
                 </Box>
                 <TrendingUpIcon sx={{ fontSize: 40, opacity: 0.8 }} />
@@ -511,7 +526,7 @@ const Calendar = () => {
       {selectedDate && (
         <Paper sx={{ p: 3, borderRadius: 3 }}>
           <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-            {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+            {format(selectedDate, 'EEEE, do MMMM yyyy')}
           </Typography>
           
           {(() => {
@@ -572,14 +587,24 @@ const Calendar = () => {
                       {events.workDays.map((workDay) => {
                         const employee = getEmployeeById(workDay.employeeId);
                         return (
-                          <Card key={workDay.id} sx={{ mb: 2, borderRadius: 2 }}>
+                          <Card 
+                            key={workDay.id} 
+                            sx={{ 
+                              mb: 2, 
+                              borderRadius: 2,
+                              border: workDay.isPaid ? '2px solid #4caf50' : 'none',
+                              backgroundColor: workDay.isPaid ? 'rgba(76, 175, 80, 0.04)' : 'inherit'
+                            }}
+                          >
                             <CardContent sx={{ py: 2 }}>
                               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                   <Avatar 
                                     sx={{ 
                                       mr: 2,
-                                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                      background: workDay.isPaid 
+                                        ? 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)'
+                                        : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                       width: 40,
                                       height: 40,
                                       fontSize: '1rem',
@@ -588,15 +613,35 @@ const Calendar = () => {
                                     {getInitials(employee?.name)}
                                   </Avatar>
                                   <Box>
-                                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                                      {employee?.name}
-                                    </Typography>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                                        {employee?.name}
+                                      </Typography>
+                                      {workDay.isPaid && (
+                                        <Chip
+                                          label="PAID"
+                                          size="small"
+                                          color="success"
+                                          sx={{ fontWeight: 600, fontSize: '0.7rem' }}
+                                        />
+                                      )}
+                                    </Box>
                                     <Typography variant="body2" color="text.secondary">
-                                      {workDay.hours} hours • {formatCurrency(workDay.hours * (employee?.dailyRate || 0), settings.currency)}
+                                      {workDay.dailyRate !== undefined ? '1 day' : `${workDay.hours || 0} hours`} • {formatCurrency(workDay.dailyRate !== undefined ? parseFloat(workDay.dailyRate) : (workDay.hours || 0) * (employee?.dailyRate || 0), settings.currency)}
                                     </Typography>
+                                    {workDay.isPaid && (
+                                      <Typography variant="body2" color="success.main" sx={{ fontWeight: 600 }}>
+                                        Paid {format(new Date(workDay.paidDate), 'EEEE, do MMMM yyyy')} • {workDay.paymentMethod}
+                                      </Typography>
+                                    )}
                                     {workDay.notes && (
                                       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                                         {workDay.notes}
+                                      </Typography>
+                                    )}
+                                    {workDay.paymentNotes && (
+                                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontStyle: 'italic' }}>
+                                        Payment notes: {workDay.paymentNotes}
                                       </Typography>
                                     )}
                                   </Box>
@@ -708,7 +753,14 @@ const Calendar = () => {
               <InputLabel>Employee</InputLabel>
               <Select
                 value={workDayForm.employeeId}
-                onChange={(e) => setWorkDayForm({ ...workDayForm, employeeId: e.target.value })}
+                onChange={(e) => {
+                  const selectedEmployee = employees.find(emp => emp.id === e.target.value);
+                  setWorkDayForm({ 
+                    ...workDayForm, 
+                    employeeId: e.target.value,
+                    dailyRate: selectedEmployee?.dailyRate?.toString() || ''
+                  });
+                }}
                 label="Employee"
               >
                 {employees.map((employee) => (
@@ -730,10 +782,10 @@ const Calendar = () => {
             />
             <TextField
               fullWidth
-              label="Hours"
+              label="Daily Rate"
               type="number"
-              value={workDayForm.hours}
-              onChange={(e) => setWorkDayForm({ ...workDayForm, hours: e.target.value })}
+              value={workDayForm.dailyRate}
+              onChange={(e) => setWorkDayForm({ ...workDayForm, dailyRate: e.target.value })}
               margin="normal"
               required
               inputProps={{ min: 0, step: 0.5 }}
@@ -811,7 +863,7 @@ const Calendar = () => {
               required
               inputProps={{ min: 0, step: 0.01 }}
               InputProps={{
-                startAdornment: <Typography variant="body2" sx={{ mr: 1 }}>$</Typography>,
+                startAdornment: <Typography variant="body2" sx={{ mr: 1 }}>{getCurrencySymbol(settings.currency)}</Typography>,
               }}
             />
             <TextField

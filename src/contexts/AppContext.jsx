@@ -424,6 +424,127 @@ export const AppProvider = ({ children, currentUser }) => {
     }
   };
 
+  // Work Day Payment actions
+  const markWorkDayAsPaid = async (workDayId, paymentData) => {
+    if (!currentUser || !isInitialized) return;
+    
+    try {
+      dispatch({ type: 'SET_SYNCING', payload: true });
+      
+      // Get the work day to calculate the amount
+      const workDay = state.workDays.find(day => day.id === workDayId);
+      if (!workDay) {
+        throw new Error('Work day not found');
+      }
+      
+      // Calculate the amount based on the work day's daily rate
+      const employee = state.employees.find(emp => emp.id === workDay.employeeId);
+      let paidAmount;
+      if (workDay.dailyRate !== undefined) {
+        paidAmount = workDay.dailyRate || 0;
+      } else {
+        // Legacy: if hours exists, calculate based on hours * employee's dailyRate
+        paidAmount = (workDay.hours || 0) * (employee?.dailyRate || 0);
+      }
+      
+      const workDaysRef = getUserCollection('workDays');
+      await updateDoc(doc(workDaysRef, workDayId), {
+        isPaid: true,
+        paidDate: paymentData.paidDate,
+        paymentMethod: paymentData.paymentMethod,
+        paymentNotes: paymentData.paymentNotes || '',
+        paidAmount: paidAmount,
+      });
+      
+      console.log('[Context] Work day marked as paid in Firebase');
+      
+    } catch (error) {
+      console.error('[Context] Mark work day as paid error:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to mark work day as paid' });
+      throw error;
+    } finally {
+      setTimeout(() => {
+        dispatch({ type: 'SET_SYNCING', payload: false });
+      }, 300);
+    }
+  };
+
+  const unmarkWorkDayAsPaid = async (workDayId) => {
+    if (!currentUser || !isInitialized) return;
+    
+    try {
+      dispatch({ type: 'SET_SYNCING', payload: true });
+      
+      const workDaysRef = getUserCollection('workDays');
+      await updateDoc(doc(workDaysRef, workDayId), {
+        isPaid: false,
+        paidDate: null,
+        paymentMethod: null,
+        paymentNotes: null,
+        paidAmount: null,
+      });
+      
+      console.log('[Context] Work day unmarked as paid in Firebase');
+      
+    } catch (error) {
+      console.error('[Context] Unmark work day as paid error:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to unmark work day as paid' });
+      throw error;
+    } finally {
+      setTimeout(() => {
+        dispatch({ type: 'SET_SYNCING', payload: false });
+      }, 300);
+    }
+  };
+
+  const markMultipleWorkDaysAsPaid = async (workDayIds, paymentData) => {
+    if (!currentUser || !isInitialized) return;
+    
+    try {
+      dispatch({ type: 'SET_SYNCING', payload: true });
+      
+      const workDaysRef = getUserCollection('workDays');
+      const updatePromises = workDayIds.map(async (workDayId) => {
+        // Get the work day to calculate the amount
+        const workDay = state.workDays.find(day => day.id === workDayId);
+        if (!workDay) {
+          throw new Error(`Work day ${workDayId} not found`);
+        }
+        
+        // Calculate the amount based on the work day's daily rate
+        const employee = state.employees.find(emp => emp.id === workDay.employeeId);
+        let paidAmount;
+        if (workDay.dailyRate !== undefined) {
+          paidAmount = workDay.dailyRate || 0;
+        } else {
+          // Legacy: if hours exists, calculate based on hours * employee's dailyRate
+          paidAmount = (workDay.hours || 0) * (employee?.dailyRate || 0);
+        }
+        
+        return updateDoc(doc(workDaysRef, workDayId), {
+          isPaid: true,
+          paidDate: paymentData.paidDate,
+          paymentMethod: paymentData.paymentMethod,
+          paymentNotes: paymentData.paymentNotes || '',
+          paidAmount: paidAmount,
+        });
+      });
+      
+      await Promise.all(updatePromises);
+      
+      console.log('[Context] Multiple work days marked as paid in Firebase');
+      
+    } catch (error) {
+      console.error('[Context] Mark multiple work days as paid error:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to mark work days as paid' });
+      throw error;
+    } finally {
+      setTimeout(() => {
+        dispatch({ type: 'SET_SYNCING', payload: false });
+      }, 300);
+    }
+  };
+
   // Helper functions
   const getEmployeeWorkDays = (employeeId) => {
     return state.workDays.filter(day => day.employeeId === employeeId);
@@ -438,8 +559,28 @@ export const AppProvider = ({ children, currentUser }) => {
     const payments = getEmployeePayments(employeeId);
     const employee = state.employees.find(emp => emp.id === employeeId);
     
-    const totalOwed = workDays.reduce((sum, day) => sum + (day.hours * (employee?.dailyRate || 0)), 0);
-    const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
+    const totalOwed = workDays.reduce((sum, day) => {
+      // Handle backward compatibility: if dailyRate exists, use it; otherwise use employee's dailyRate
+      if (day.dailyRate !== undefined) {
+        return sum + (day.dailyRate || 0);
+      } else {
+        // Legacy: if hours exists, calculate based on hours * dailyRate
+        return sum + ((day.hours || 0) * (employee?.dailyRate || 0));
+      }
+    }, 0);
+    
+    // Calculate total paid from work days marked as paid + legacy separate payments
+    const totalPaidFromWorkDays = workDays.reduce((sum, day) => {
+      if (day.isPaid) {
+        // Use paidAmount if specified, otherwise use the calculated amount
+        const paidAmount = day.paidAmount || (day.dailyRate !== undefined ? day.dailyRate : (day.hours || 0) * (employee?.dailyRate || 0));
+        return sum + paidAmount;
+      }
+      return sum;
+    }, 0);
+    
+    const totalPaidFromLegacyPayments = payments.reduce((sum, payment) => sum + payment.amount, 0);
+    const totalPaid = totalPaidFromWorkDays + totalPaidFromLegacyPayments;
     
     return { totalOwed, totalPaid, outstanding: totalOwed - totalPaid };
   };
@@ -484,6 +625,9 @@ export const AppProvider = ({ children, currentUser }) => {
     getEmployeePayments,
     calculateEmployeeTotals,
     updateSettings,
+    markWorkDayAsPaid,
+    unmarkWorkDayAsPaid,
+    markMultipleWorkDaysAsPaid,
   };
 
   return (

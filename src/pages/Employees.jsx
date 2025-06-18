@@ -45,7 +45,7 @@ import {
 } from '@mui/icons-material';
 import { useApp } from '../contexts/AppContext';
 import EmployeeDetails from '../components/EmployeeDetails';
-import { formatCurrency } from '../utils/currency';
+import { formatCurrency, getCurrencySymbol } from '../utils/currency';
 
 const Employees = () => {
   const { 
@@ -262,10 +262,10 @@ const Employees = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
                   <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                    {employees.filter(emp => calculateEmployeeTotals(emp.id).outstanding > 0).length}
+                    {employees.filter(emp => calculateEmployeeTotals(emp.id).outstanding !== 0).length}
                   </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    Outstanding Payments
+                    Need Attention
                   </Typography>
                 </Box>
                 <TrendingDownIcon sx={{ fontSize: 40, opacity: 0.8 }} />
@@ -449,20 +449,23 @@ const Employees = () => {
                     {/* Outstanding Amount */}
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="caption" color="text.secondary" display="block">
-                        Outstanding
+                        {totals.outstanding < 0 ? 'In Credit' : 'Outstanding'}
                       </Typography>
                       <Typography 
                         variant="h6" 
                         fontWeight="bold"
                         color={getStatusColor(totals.outstanding) + '.main'}
                       >
-                        {formatCurrency(totals.outstanding, settings.currency)}
+                        {totals.outstanding < 0 
+                          ? formatCurrency(Math.abs(totals.outstanding), settings.currency)
+                          : formatCurrency(totals.outstanding, settings.currency)
+                        }
                       </Typography>
                     </Box>
 
                     {/* Status Chip */}
                     <Chip
-                      label={totals.outstanding > 0 ? 'Outstanding' : 'Paid Up'}
+                      label={totals.outstanding < 0 ? 'In Credit' : (totals.outstanding > 0 ? 'Outstanding' : 'Paid Up')}
                       color={getStatusColor(totals.outstanding)}
                       size="small"
                       sx={{ 
@@ -529,7 +532,7 @@ const Employees = () => {
                 required
                 disabled={submitting}
                 InputProps={{
-                  startAdornment: <Typography variant="body2" sx={{ mr: 1 }}>$</Typography>,
+                  startAdornment: <Typography variant="body2" sx={{ mr: 1 }}>{getCurrencySymbol(settings.currency)}</Typography>,
                 }}
                 onKeyDown={e => {
                   if (e.key === 'Enter') {
