@@ -26,6 +26,7 @@ import {
   Logout as LogoutIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import SyncStatus from './SyncStatus';
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -91,6 +92,13 @@ const Layout = ({ children }) => {
           >
             💰 Money Tracker
           </Typography>
+          
+          {/* Sync Status */}
+          {currentUser && (
+            <Box sx={{ mr: 2 }}>
+              <SyncStatus />
+            </Box>
+          )}
           
           {/* User Menu */}
           {currentUser && (
