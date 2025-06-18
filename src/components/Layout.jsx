@@ -72,7 +72,7 @@ const Layout = ({ children }) => {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       {/* Header */}
       <AppBar 
-        position="static" 
+        position="fixed" 
         elevation={0}
         sx={{
           background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
@@ -82,6 +82,7 @@ const Layout = ({ children }) => {
             ml: '240px',
             width: 'calc(100% - 240px)',
           }),
+          mt: 0, // Remove any margin above
         }}
       >
         <Toolbar>
@@ -95,7 +96,7 @@ const Layout = ({ children }) => {
               textShadow: '0 1px 2px rgba(0,0,0,0.1)',
             }}
           >
-            💰 Money Tracker
+            💰 Payment Tracker
           </Typography>
           
           {/* User Menu */}
@@ -240,8 +241,9 @@ const Layout = ({ children }) => {
         sx={{ 
           flexGrow: 1,
           ml: isMobile ? 0 : '240px',
+          mt: '64px', // Account for fixed AppBar height
           transition: 'margin 0.3s',
-          minHeight: 'calc(100vh - 64px)', // Account for header height
+          minHeight: 'calc(100vh - 64px)',
         }}
       >
         <Container 
@@ -271,6 +273,7 @@ const Layout = ({ children }) => {
             right: 0,
             zIndex: 1000,
             borderTop: '1px solid rgba(0,0,0,0.1)',
+            mt: '64px', // Push below fixed AppBar
           }} 
           elevation={8}
         >
