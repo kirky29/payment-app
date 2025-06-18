@@ -81,8 +81,16 @@ export const AuthProvider = ({ children }) => {
       console.log('Attempting to logout');
       await signOut(auth);
       console.log('Logout successful');
-      // Clear local storage when logging out
-      localStorage.clear();
+      
+      // Only clear user-specific data, not all localStorage
+      if (currentUser) {
+        const userId = currentUser.uid;
+        localStorage.removeItem(`employees_${userId}`);
+        localStorage.removeItem(`workDays_${userId}`);
+        localStorage.removeItem(`payments_${userId}`);
+        localStorage.removeItem(`settings_${userId}`);
+        console.log('Cleared user-specific data for:', userId);
+      }
     } catch (error) {
       console.error('Logout error:', error);
       const errorMessage = getErrorMessage(error.code);

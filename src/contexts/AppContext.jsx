@@ -152,10 +152,9 @@ export const AppProvider = ({ children, currentUser }) => {
                 id: doc.id,
                 ...doc.data(),
               }));
-              if (employees.length > 0) {
-                dispatch({ type: 'SET_EMPLOYEES', payload: employees });
-                localStorage.setItem(getStorageKey('employees'), JSON.stringify(employees));
-              } // else, do not overwrite local data
+              // Always update with Firebase data, even if empty
+              dispatch({ type: 'SET_EMPLOYEES', payload: employees });
+              localStorage.setItem(getStorageKey('employees'), JSON.stringify(employees));
             },
             (error) => {
               console.warn('Firebase employees connection error:', error);
@@ -172,10 +171,9 @@ export const AppProvider = ({ children, currentUser }) => {
                 id: doc.id,
                 ...doc.data(),
               }));
-              if (workDays.length > 0) {
-                dispatch({ type: 'SET_WORK_DAYS', payload: workDays });
-                localStorage.setItem(getStorageKey('workDays'), JSON.stringify(workDays));
-              }
+              // Always update with Firebase data, even if empty
+              dispatch({ type: 'SET_WORK_DAYS', payload: workDays });
+              localStorage.setItem(getStorageKey('workDays'), JSON.stringify(workDays));
             },
             (error) => {
               console.warn('Firebase workDays connection error:', error);
@@ -192,10 +190,9 @@ export const AppProvider = ({ children, currentUser }) => {
                 id: doc.id,
                 ...doc.data(),
               }));
-              if (payments.length > 0) {
-                dispatch({ type: 'SET_PAYMENTS', payload: payments });
-                localStorage.setItem(getStorageKey('payments'), JSON.stringify(payments));
-              }
+              // Always update with Firebase data, even if empty
+              dispatch({ type: 'SET_PAYMENTS', payload: payments });
+              localStorage.setItem(getStorageKey('payments'), JSON.stringify(payments));
             },
             (error) => {
               console.warn('Firebase payments connection error:', error);
