@@ -248,279 +248,129 @@ const Calendar = () => {
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-          <Box>
-            <Typography 
-              variant={isMobile ? "h4" : "h3"} 
-              component="h1" 
-              sx={{ 
-                fontWeight: 700,
-                background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                mb: 1,
-              }}
-            >
-              Calendar View
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Track work days and payments across your team
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setOpenWorkDayDialog(true)}
-              sx={{
-                background: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #f57c00 0%, #ef6c00 100%)',
-                },
-              }}
-            >
-              Add Work Day
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setOpenPaymentDialog(true)}
-              sx={{
-                background: 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #388e3c 0%, #2e7d32 100%)',
-                },
-              }}
-            >
-              Add Payment
-            </Button>
-          </Box>
-        </Box>
-      </Paper>
-
-      {/* Month Stats */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Card sx={{ 
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            borderRadius: 3,
-          }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                    {monthStats.workDaysCount}
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    Work Days
-                  </Typography>
-                </Box>
-                <WorkIcon sx={{ fontSize: 40, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Card sx={{ 
-            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-            color: 'white',
-            borderRadius: 3,
-          }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                    {monthStats.paymentsCount}
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    Payments
-                  </Typography>
-                </Box>
-                <PaymentIcon sx={{ fontSize: 40, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Card sx={{ 
-            background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-            color: 'white',
-            borderRadius: 3,
-          }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                    {monthStats.totalDays}
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    Total Days
-                  </Typography>
-                </Box>
-                <TrendingUpIcon sx={{ fontSize: 40, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Card sx={{ 
-            background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-            color: 'white',
-            borderRadius: 3,
-          }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                    {formatCurrency(monthStats.totalPayments, settings.currency)}
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    Total Paid
-                  </Typography>
-                </Box>
-                <PaymentIcon sx={{ fontSize: 40, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Card sx={{ 
-            background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-            color: 'white',
-            borderRadius: 3,
-          }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                    {formatCurrency(monthStats.totalOwed, settings.currency)}
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    Total Owed
-                  </Typography>
-                </Box>
-                <TrendingDownIcon sx={{ fontSize: 40, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Calendar Navigation */}
-      <Paper sx={{ p: 3, mb: 3, borderRadius: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Button
-            onClick={() => navigateMonth(-1)}
-            variant="outlined"
-            sx={{ minWidth: 'auto', px: 2 }}
-          >
-            ← Previous
-          </Button>
-          <Typography variant="h5" sx={{ fontWeight: 600 }}>
+          <Button onClick={() => navigateMonth(-1)} variant="outlined" size="small">&lt;</Button>
+          <Typography variant="h5" sx={{ fontWeight: 700 }}>
             {format(currentDate, 'MMMM yyyy')}
           </Typography>
-          <Button
-            onClick={() => navigateMonth(1)}
-            variant="outlined"
-            sx={{ minWidth: 'auto', px: 2 }}
-          >
-            Next →
-          </Button>
+          <Button onClick={() => navigateMonth(1)} variant="outlined" size="small">&gt;</Button>
         </Box>
+        <Box sx={{ mt: 2, display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+          <Chip label={`Work Days: ${monthStats.workDaysCount}`} color="primary" icon={<WorkIcon />} />
+          <Chip label={`Total Owed: ${formatCurrency(monthStats.totalOwed, settings.currency)}`} color="warning" icon={<TrendingUpIcon />} />
+          <Chip label={`Total Paid: ${formatCurrency(monthStats.totalPayments, settings.currency)}`} color="success" icon={<PaymentIcon />} />
+        </Box>
+      </Paper>
 
-        {/* Calendar Grid */}
-        <Grid container spacing={1}>
-          {/* Day Headers */}
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-            <Grid item xs={12/7} key={day}>
-              <Box sx={{ 
-                p: 1, 
-                textAlign: 'center',
-                backgroundColor: 'rgba(0,0,0,0.02)',
-                borderRadius: 1,
-                fontWeight: 600,
-                fontSize: '0.875rem',
-              }}>
-                {day}
-              </Box>
-            </Grid>
+      {/* Calendar Grid */}
+      <Paper sx={{ p: { xs: 1, sm: 2 }, borderRadius: 3, mb: 3 }}>
+        {/* Weekday headers */}
+        <Box sx={{ display: { xs: 'none', sm: 'grid' }, gridTemplateColumns: 'repeat(7, 1fr)', mb: 1 }}>
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
+            <Typography key={day} align="center" variant="subtitle2" color="text.secondary">{day}</Typography>
           ))}
-
-          {/* Calendar Days */}
-          {getDaysInMonth().map((day) => {
-            const events = getEventsForDate(day);
-            const isSelected = selectedDate && isSameDay(day, selectedDate);
-            const isCurrentDay = isToday(day);
-            
+        </Box>
+        {/* Days grid */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'repeat(2, 1fr)',
+              sm: 'repeat(4, 1fr)',
+              md: 'repeat(7, 1fr)'
+            },
+            gap: 1,
+          }}
+        >
+          {getDaysInMonth().map(date => {
+            const { workDays: dayWorkDays, payments: dayPayments } = getEventsForDate(date);
+            const isPaid = dayWorkDays.length > 0 && dayWorkDays.every(wd => wd.isPaid);
+            const isUnpaid = dayWorkDays.length > 0 && dayWorkDays.some(wd => !wd.isPaid);
+            const isCurrentDay = isToday(date);
             return (
-              <Grid item xs={12/7} key={day.toISOString()}>
-                <Box
-                  onClick={() => handleDateClick(day)}
-                  sx={{
-                    p: 1,
-                    minHeight: isMobile ? 80 : 100,
-                    border: '1px solid',
-                    borderColor: isSelected ? 'primary.main' : 'divider',
-                    borderRadius: 2,
-                    cursor: 'pointer',
-                    backgroundColor: isSelected ? 'primary.light' : isCurrentDay ? 'action.hover' : 'transparent',
-                    '&:hover': {
-                      backgroundColor: isSelected ? 'primary.light' : 'action.hover',
-                      borderColor: 'primary.main',
-                    },
-                    transition: 'all 0.2s ease-in-out',
-                    position: 'relative',
-                  }}
-                >
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontWeight: isCurrentDay ? 700 : 500,
-                      color: isCurrentDay ? 'primary.main' : 'text.primary',
-                      mb: 1,
-                    }}
-                  >
-                    {format(day, 'd')}
+              <Paper
+                key={date.toISOString()}
+                elevation={isCurrentDay ? 6 : 1}
+                sx={{
+                  p: 1,
+                  minHeight: 90,
+                  border: isCurrentDay ? '2px solid #1976d2' : '1px solid #e0e0e0',
+                  background:
+                    isPaid ? 'linear-gradient(135deg, #e0f7fa 0%, #b2dfdb 100%)' :
+                    isUnpaid ? 'linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)' :
+                    'white',
+                  position: 'relative',
+                  cursor: 'pointer',
+                  transition: 'box-shadow 0.2s',
+                  '&:hover': { boxShadow: 6 },
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
+                }}
+                onClick={() => handleDateClick(date)}
+                aria-label={`Day ${format(date, 'do MMMM yyyy')}${isCurrentDay ? ', today' : ''}`}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    {format(date, 'd')}
                   </Typography>
-
-                  {/* Event Indicators */}
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                    {events.workDays.length > 0 && (
-                      <Chip
-                        label={`${events.workDays.length} work`}
-                        size="small"
-                        icon={<WorkIcon />}
-                        sx={{ 
-                          fontSize: '0.7rem',
-                          height: 20,
-                          backgroundColor: 'rgba(255, 152, 0, 0.1)',
-                          color: 'orange.700',
-                          '& .MuiChip-icon': { fontSize: '0.8rem' }
-                        }}
-                      />
-                    )}
-                    {events.payments.length > 0 && (
-                      <Chip
-                        label={`${events.payments.length} payment`}
-                        size="small"
-                        icon={<PaymentIcon />}
-                        sx={{ 
-                          fontSize: '0.7rem',
-                          height: 20,
-                          backgroundColor: 'rgba(76, 175, 80, 0.1)',
-                          color: 'green.700',
-                          '& .MuiChip-icon': { fontSize: '0.8rem' }
-                        }}
-                      />
-                    )}
-                  </Box>
+                  {isCurrentDay && (
+                    <Chip label="Today" color="info" size="small" sx={{ ml: 0.5 }} />
+                  )}
                 </Box>
-              </Grid>
+                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', justifyContent: 'center', mb: 0.5 }}>
+                  {dayWorkDays.map(wd => {
+                    const emp = getEmployeeById(wd.employeeId);
+                    return (
+                      <Avatar
+                        key={wd.id}
+                        sx={{ width: 24, height: 24, fontSize: 12, bgcolor: wd.isPaid ? 'success.main' : 'warning.main' }}
+                        title={emp?.name || ''}
+                      >
+                        {emp ? getInitials(emp.name) : '?'}
+                      </Avatar>
+                    );
+                  })}
+                </Box>
+                {isPaid && <Chip label="Paid" color="success" size="small" icon={<PaymentIcon fontSize="small" />} />}
+                {isUnpaid && <Chip label="Unpaid" color="warning" size="small" icon={<WorkIcon fontSize="small" />} />}
+                {dayWorkDays.length === 0 && <Typography variant="caption" color="text.secondary">No work</Typography>}
+              </Paper>
             );
           })}
-        </Grid>
+        </Box>
+        {/* Legend */}
+        <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+          <Chip label="Paid" color="success" size="small" icon={<PaymentIcon fontSize="small" />} />
+          <Chip label="Unpaid" color="warning" size="small" icon={<WorkIcon fontSize="small" />} />
+          <Chip label="Today" color="info" size="small" />
+        </Box>
       </Paper>
+
+      {/* Floating Action Button */}
+      <Box sx={{ position: 'fixed', bottom: 80, right: 16, zIndex: 1200 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={() => setOpenWorkDayDialog(true)}
+          sx={{
+            borderRadius: '50%',
+            minWidth: 56,
+            minHeight: 56,
+            boxShadow: 4,
+            fontSize: 0,
+            p: 0,
+            background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
+            },
+          }}
+          aria-label="Add Work Day"
+        >
+          <AddIcon fontSize="large" />
+        </Button>
+      </Box>
 
       {/* Selected Date Details */}
       {selectedDate && (
