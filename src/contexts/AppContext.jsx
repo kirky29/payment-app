@@ -9,7 +9,8 @@ import {
   query, 
   where,
   orderBy,
-  onSnapshot
+  onSnapshot,
+  setDoc
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -81,6 +82,12 @@ export const AppProvider = ({ children, currentUser }) => {
     return collection(db, `users/${currentUser.uid}/${collectionName}`);
   };
 
+  // Get user-specific settings document reference
+  const getUserSettingsDoc = () => {
+    if (!currentUser) return null;
+    return doc(db, `users/${currentUser.uid}/settings/main`);
+  };
+
   // Real-time listeners for automatic syncing
   useEffect(() => {
     if (!currentUser) {
@@ -92,7 +99,7 @@ export const AppProvider = ({ children, currentUser }) => {
     console.log('[Context] Setting up real-time listeners for user:', currentUser.uid);
     dispatch({ type: 'SET_LOADING', payload: true });
 
-    let unsubscribeEmployees, unsubscribeWorkDays, unsubscribePayments;
+    let unsubscribeEmployees, unsubscribeWorkDays, unsubscribePayments, unsubscribeSettings;
 
     const setupListeners = async () => {
       try {
@@ -152,6 +159,19 @@ export const AppProvider = ({ children, currentUser }) => {
           );
         }
 
+        // Settings listener (for currency, theme, etc.)
+        const settingsDocRef = getUserSettingsDoc();
+        if (settingsDocRef) {
+          unsubscribeSettings = onSnapshot(settingsDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+              console.log('[AppContext] Settings listener fired:', docSnap.data());
+              dispatch({ type: 'UPDATE_SETTINGS', payload: docSnap.data() });
+            }
+          }, (error) => {
+            console.error('[Firebase] Settings listener error:', error);
+          });
+        }
+
         // Mark as initialized after a short delay to ensure listeners are active
         setTimeout(() => {
           setIsInitialized(true);
@@ -171,6 +191,7 @@ export const AppProvider = ({ children, currentUser }) => {
       if (unsubscribeEmployees) unsubscribeEmployees();
       if (unsubscribeWorkDays) unsubscribeWorkDays();
       if (unsubscribePayments) unsubscribePayments();
+      if (unsubscribeSettings) unsubscribeSettings();
     };
   }, [currentUser]);
 
@@ -425,19 +446,22 @@ export const AppProvider = ({ children, currentUser }) => {
 
   const updateSettings = async (newSettings) => {
     try {
+      console.log('[AppContext] updateSettings called with:', newSettings);
       dispatch({ type: 'UPDATE_SETTINGS', payload: newSettings });
       
       if (currentUser) {
-        const settingsRef = getUserCollection('settings');
-        const settingsSnapshot = await getDocs(settingsRef);
+        const settingsDocRef = getUserSettingsDoc();
         const updatedSettings = { ...state.settings, ...newSettings };
-        
-        if (settingsSnapshot.empty) {
-          await addDoc(settingsRef, updatedSettings);
-        } else {
-          const settingsDoc = settingsSnapshot.docs[0];
-          await updateDoc(doc(settingsRef, settingsDoc.id), newSettings);
-        }
+        console.log('[AppContext] Writing settings to Firestore:', updatedSettings);
+        await updateDoc(settingsDocRef, updatedSettings).catch(async (err) => {
+          // If doc doesn't exist, create it
+          if (err.code === 'not-found' || err.message?.includes('No document to update')) {
+            console.log('[AppContext] Creating new settings doc:', updatedSettings);
+            await setDoc(settingsDocRef, updatedSettings);
+          } else {
+            throw err;
+          }
+        });
       }
     } catch (error) {
       console.warn('Error updating settings:', error);

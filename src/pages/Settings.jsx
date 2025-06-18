@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -40,6 +40,8 @@ const Settings = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedEmployeeToDelete, setSelectedEmployeeToDelete] = useState(null);
   const [showClearDataDialog, setShowClearDataDialog] = useState(false);
+  const [pendingCurrency, setPendingCurrency] = useState(settings.currency);
+  const [currencyChanged, setCurrencyChanged] = useState(false);
 
   const currencies = [
     { code: 'USD', name: 'US Dollar', symbol: '$' },
@@ -50,6 +52,13 @@ const Settings = () => {
     { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
     { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
   ];
+
+  useEffect(() => {
+    console.log('[Settings] Current settings:', settings);
+    console.log('[Settings] Current currency:', settings.currency);
+    setPendingCurrency(settings.currency);
+    setCurrencyChanged(false);
+  }, [settings]);
 
   const handleCurrencyChange = (event) => {
     updateSettings({ currency: event.target.value });
@@ -92,8 +101,11 @@ const Settings = () => {
               <FormControl fullWidth>
                 <InputLabel>Currency</InputLabel>
                 <Select
-                  value={settings.currency}
-                  onChange={handleCurrencyChange}
+                  value={pendingCurrency}
+                  onChange={e => {
+                    setPendingCurrency(e.target.value);
+                    setCurrencyChanged(e.target.value !== settings.currency);
+                  }}
                   label="Currency"
                 >
                   {currencies.map((currency) => (
@@ -102,6 +114,20 @@ const Settings = () => {
                     </MenuItem>
                   ))}
                 </Select>
+                {currencyChanged && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    sx={{ mt: 2 }}
+                    onClick={() => {
+                      updateSettings({ currency: pendingCurrency });
+                      setCurrencyChanged(false);
+                      console.log('[Settings] Change Currency button clicked:', pendingCurrency);
+                    }}
+                  >
+                    Change Currency
+                  </Button>
+                )}
               </FormControl>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                 This will affect how all monetary values are displayed throughout the app.

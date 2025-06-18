@@ -122,6 +122,7 @@ const Employees = () => {
   };
 
   const handleDelete = async (employee) => {
+    handleMenuClose();
     if (window.confirm(`Are you sure you want to delete ${employee.name}?`)) {
       await deleteEmployee(employee.id);
     }
@@ -507,29 +508,39 @@ const Employees = () => {
         </DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 1 }}>
-            <TextField
-              fullWidth
-              label="Employee Name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              margin="normal"
-              required
-              disabled={submitting}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Daily Rate"
-              type="number"
-              value={formData.dailyRate}
-              onChange={(e) => setFormData({ ...formData, dailyRate: e.target.value })}
-              margin="normal"
-              required
-              disabled={submitting}
-              InputProps={{
-                startAdornment: <Typography variant="body2" sx={{ mr: 1 }}>$</Typography>,
-              }}
-            />
+            <form onSubmit={e => { e.preventDefault(); handleSubmit(); }}>
+              <TextField
+                fullWidth
+                label="Employee Name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                margin="normal"
+                required
+                disabled={submitting}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label="Daily Rate"
+                type="number"
+                value={formData.dailyRate}
+                onChange={(e) => setFormData({ ...formData, dailyRate: e.target.value })}
+                margin="normal"
+                required
+                disabled={submitting}
+                InputProps={{
+                  startAdornment: <Typography variant="body2" sx={{ mr: 1 }}>$</Typography>,
+                }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
+              />
+              {/* Hidden submit button for Enter key accessibility */}
+              <button type="submit" style={{ display: 'none' }} aria-hidden="true" />
+            </form>
           </Box>
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 1 }}>
