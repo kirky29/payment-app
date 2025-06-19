@@ -30,6 +30,7 @@ import {
   Logout as LogoutIcon,
   Notifications as NotificationsIcon,
   KeyboardArrowUp as KeyboardArrowUpIcon,
+  Group as GroupIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
@@ -134,14 +135,15 @@ const Layout = ({ children }) => {
   const getCurrentTab = () => {
     const path = location.pathname;
     if (path === '/' || path === '/employees') return 0;
-    if (path === '/calendar') return 1;
-    if (path === '/reports') return 2;
-    if (path === '/settings') return 3;
+    if (path === '/staff') return 1;
+    if (path === '/calendar') return 2;
+    if (path === '/reports') return 3;
+    if (path === '/settings') return 4;
     return 0;
   };
 
   const handleTabChange = (event, newValue) => {
-    const routes = ['/employees', '/calendar', '/reports', '/settings'];
+    const routes = ['/employees', '/staff', '/calendar', '/reports', '/settings'];
     navigate(routes[newValue]);
     
     // Add haptic feedback for mobile
@@ -169,7 +171,7 @@ const Layout = ({ children }) => {
 
     const currentTab = getCurrentTab();
     
-    if (isLeftSwipe && currentTab < 3) {
+    if (isLeftSwipe && currentTab < 4) {
       handleTabChange(null, currentTab + 1);
     }
     if (isRightSwipe && currentTab > 0) {
@@ -330,6 +332,7 @@ const Layout = ({ children }) => {
             
             {[
               { label: 'Team', icon: <PeopleIcon />, path: '/employees', count: employees.length },
+              { label: 'Staff', icon: <GroupIcon />, path: '/staff' },
               { label: 'Calendar', icon: <CalendarIcon />, path: '/calendar' },
               { label: 'Reports', icon: <ReportsIcon />, path: '/reports', count: notifications.overduePayments },
               { label: 'Settings', icon: <SettingsIcon />, path: '/settings' },
@@ -450,6 +453,10 @@ const Layout = ({ children }) => {
                   <PeopleIcon />
                 </Badge>
               }
+            />
+            <BottomNavigationAction
+              label="Staff"
+              icon={<GroupIcon />}
             />
             <BottomNavigationAction
               label="Calendar"

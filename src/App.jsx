@@ -10,6 +10,7 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import EmailVerification from './components/EmailVerification';
 import Employees from './pages/Employees';
+import Staff from './pages/Staff';
 import Calendar from './pages/Calendar';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
@@ -224,6 +225,7 @@ const AppContent = () => {
                   <Routes>
                     <Route path="/" element={<Employees />} />
                     <Route path="/employees" element={<Employees />} />
+                    <Route path="/staff" element={<Staff />} />
                     <Route path="/calendar" element={<Calendar />} />
                     <Route path="/reports" element={<Reports />} />
                     <Route path="/settings" element={<Settings />} />
