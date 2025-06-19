@@ -251,39 +251,40 @@ const Calendar = () => {
   };
 
   return (
-    <Box>
+    <Box sx={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
       {/* Header Section */}
       <Grow in timeout={500}>
         <Paper 
           elevation={0}
           sx={{ 
-            p: { xs: 2, sm: 3 },
-            mb: 3,
+            p: { xs: 1, sm: 1.5 },
+            mb: { xs: 0.5, sm: 1 },
             background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
-            borderRadius: 3,
+            borderRadius: { xs: 0, sm: 2 },
+            width: '100%',
           }}
         >
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
             <Box>
               <Typography 
                 variant="h5" 
                 component="h1" 
                 sx={{ 
-                  fontWeight: 700,
-                  fontSize: { xs: '1.25rem', sm: '1.5rem' },
+                  fontWeight: 600,
+                  fontSize: { xs: '1rem', sm: '1.2rem' },
                   color: 'primary.main',
                   display: 'flex',
                   alignItems: 'center',
                 }}
               >
-                <EventIcon sx={{ mr: 1 }} />
+                <EventIcon sx={{ mr: 0.5, fontSize: { xs: '1rem', sm: '1.2rem' } }} />
                 Work Calendar
               </Typography>
               <Typography 
                 variant="body2" 
                 color="text.secondary"
                 sx={{ 
-                  fontSize: { xs: '0.875rem', sm: '1rem' },
+                  fontSize: { xs: '0.7rem', sm: '0.8rem' },
                 }}
               >
                 Track work days and payments
@@ -425,25 +426,40 @@ const Calendar = () => {
       <Fade in timeout={700}>
         <Paper 
           sx={{ 
-            p: { xs: 1.5, sm: 2 },
-            mb: 4,
-            borderRadius: 3,
+            p: { xs: 0, sm: 0.5 },
+            mb: 0,
+            borderRadius: { xs: 0, sm: 2 },
             overflow: 'hidden',
+            width: '100%',
+            maxWidth: '100%',
+            boxShadow: { xs: 0, sm: 1 },
           }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <Grid container spacing={{ xs: 0.5, sm: 1 }}>
+          <Grid 
+            container 
+            spacing={0}
+            sx={{ 
+              width: '100%',
+              margin: 0,
+            }}
+          >
             {/* Weekday Headers */}
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <Grid item xs={12/7} key={day}>
-                <Box sx={{ p: { xs: 0.5, sm: 1 }, textAlign: 'center' }}>
+              <Grid item xs={12/7} key={day} sx={{ p: 0 }}>
+                <Box sx={{ 
+                  p: { xs: 0.25, sm: 0.5 }, 
+                  textAlign: 'center',
+                  borderBottom: 1,
+                  borderColor: 'divider',
+                }}>
                   <Typography 
                     variant="caption"
                     sx={{ 
-                      fontWeight: 700,
-                      fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                      fontWeight: 600,
+                      fontSize: { xs: '0.6rem', sm: '0.7rem' },
                       color: 'primary.main',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
@@ -466,135 +482,112 @@ const Calendar = () => {
               const totalEvents = dayWorkDays.length + dayPayments.length;
 
               return (
-                <Grow in timeout={300 + (index * 20)} key={dateStr}>
-                  <Grid item xs={12/7}>
-                    <Box
-                      sx={{
-                        position: 'relative',
-                        paddingTop: '100%', // This creates a square aspect ratio
-                        width: '100%',
-                      }}
-                    >
-                      <Card
-                        elevation={isSelected ? 8 : hasEvents ? 3 : 1}
-                        onClick={() => handleDateClick(date)}
-                        sx={{
+                <Grid 
+                  item 
+                  xs={12/7} 
+                  key={dateStr}
+                  sx={{ 
+                    p: 0,
+                    borderRight: 1,
+                    borderBottom: 1,
+                    borderColor: 'divider',
+                    '&:nth-of-type(7n)': {
+                      borderRight: 0,
+                    },
+                  }}
+                >
+                  <Box
+                    onClick={() => handleDateClick(date)}
+                    sx={{
+                      height: { xs: 60, sm: 80 },
+                      cursor: 'pointer',
+                      bgcolor: isSelected ? 'primary.light' : 
+                               !isCurrentMonth ? 'grey.50' : 
+                               hasEvents ? 'action.hover' :
+                               'background.paper',
+                      opacity: isCurrentMonth ? 1 : 0.5,
+                      transition: 'all 0.2s',
+                      position: 'relative',
+                      '&:hover': {
+                        bgcolor: 'action.hover',
+                      },
+                      ...(isToday && {
+                        '&::after': {
+                          content: '""',
                           position: 'absolute',
                           top: 0,
                           left: 0,
                           right: 0,
-                          bottom: 0,
-                          cursor: 'pointer',
-                          border: 2,
-                          borderColor: isToday ? 'primary.main' : 
-                                     isSelected ? 'primary.light' : 
-                                     'transparent',
-                          bgcolor: isSelected ? 'primary.light' : 
-                                   !isCurrentMonth ? 'grey.50' : 
-                                   hasEvents ? 'action.hover' :
-                                   'background.paper',
-                          opacity: isCurrentMonth ? 1 : 0.5,
-                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                          '&:hover': {
-                            transform: 'translateY(-3px)',
-                            boxShadow: 6,
-                            borderColor: 'primary.main',
-                          },
-                          borderRadius: 2,
-                          display: 'flex',
-                          flexDirection: 'column',
+                          height: '2px',
+                          bgcolor: 'primary.main',
+                        }
+                      })
+                    }}
+                  >
+                    <Box sx={{ p: 0.5 }}>
+                      <Typography 
+                        sx={{ 
+                          fontWeight: isToday ? 700 : 400,
+                          color: isSelected ? 'primary.main' : 
+                                 isToday ? 'primary.main' : 
+                                 'text.primary',
+                          fontSize: { xs: '0.8rem', sm: '0.9rem' },
                         }}
                       >
-                        <CardContent sx={{ 
-                          p: { xs: 0.5, sm: 1 }, 
-                          '&:last-child': { pb: { xs: 0.5, sm: 1 } },
-                          height: '100%',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                        }}>
-                          <Typography 
-                            variant="h6"
-                            sx={{ 
-                              fontWeight: isToday ? 800 : 600,
-                              color: isSelected ? 'primary.contrastText' : 
-                                     isToday ? 'primary.main' : 
-                                     'text.primary',
-                              fontSize: { xs: '0.875rem', sm: '1rem' },
-                              lineHeight: 1,
-                            }}
-                          >
-                            {format(date, 'd')}
-                          </Typography>
-                          
-                          {/* Event Indicators */}
-                          {hasEvents && (
-                            <Box 
-                              sx={{ 
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                gap: 0.25,
-                                flexWrap: 'wrap',
+                        {format(date, 'd')}
+                      </Typography>
+                      
+                      {/* Event Indicators */}
+                      {hasEvents && (
+                        <Box 
+                          sx={{ 
+                            display: 'flex',
+                            gap: 0.25,
+                            mt: 0.25,
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          {totalEvents <= 3 ? (
+                            <>
+                              {dayWorkDays.slice(0, 2).map((workDay, idx) => (
+                                <Box
+                                  key={`wd-${idx}`}
+                                  sx={{
+                                    width: 3,
+                                    height: 3,
+                                    borderRadius: '50%',
+                                    bgcolor: workDay.isPaid ? 'success.main' : 'warning.main',
+                                  }}
+                                />
+                              ))}
+                              {dayPayments.slice(0, 1).map((payment, idx) => (
+                                <Box
+                                  key={`p-${idx}`}
+                                  sx={{
+                                    width: 3,
+                                    height: 3,
+                                    borderRadius: '50%',
+                                    bgcolor: 'info.main',
+                                  }}
+                                />
+                              ))}
+                            </>
+                          ) : (
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                fontSize: '0.6rem',
+                                color: 'text.secondary',
                               }}
                             >
-                              {totalEvents <= 3 ? (
-                                <>
-                                  {dayWorkDays.slice(0, 2).map((workDay, idx) => (
-                                    <Box
-                                      key={`wd-${idx}`}
-                                      sx={{
-                                        width: { xs: 4, sm: 6 },
-                                        height: { xs: 4, sm: 6 },
-                                        borderRadius: '50%',
-                                        bgcolor: workDay.isPaid ? 'success.main' : 'warning.main',
-                                        boxShadow: 1,
-                                      }}
-                                    />
-                                  ))}
-                                  {dayPayments.slice(0, 1).map((payment, idx) => (
-                                    <Box
-                                      key={`p-${idx}`}
-                                      sx={{
-                                        width: { xs: 4, sm: 6 },
-                                        height: { xs: 4, sm: 6 },
-                                        borderRadius: '50%',
-                                        bgcolor: 'info.main',
-                                        boxShadow: 1,
-                                      }}
-                                    />
-                                  ))}
-                                </>
-                              ) : (
-                                <Badge 
-                                  badgeContent={totalEvents} 
-                                  color="primary"
-                                  sx={{
-                                    '& .MuiBadge-badge': {
-                                      fontSize: '0.6rem',
-                                      minWidth: 14,
-                                      height: 14,
-                                      padding: '0 2px',
-                                    }
-                                  }}
-                                >
-                                  <EventIcon 
-                                    fontSize="small" 
-                                    sx={{ 
-                                      color: 'primary.main',
-                                      fontSize: { xs: '0.875rem', sm: '1rem' }
-                                    }} 
-                                  />
-                                </Badge>
-                              )}
-                            </Box>
+                              {totalEvents} events
+                            </Typography>
                           )}
-                        </CardContent>
-                      </Card>
+                        </Box>
+                      )}
                     </Box>
-                  </Grid>
-                </Grow>
+                  </Box>
+                </Grid>
               );
             })}
           </Grid>
