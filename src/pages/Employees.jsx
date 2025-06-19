@@ -873,16 +873,16 @@ const Employees = () => {
 
   if (loading && !isInitialized) {
     return (
-      <Container maxWidth="xl" sx={{ py: isMobile ? 1 : 2 }}>
+      <Box sx={{ px: isMobile ? 1 : 3, py: isMobile ? 1 : 2, width: '100%' }}>
         <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2, mb: 4 }} />
         <Grid container spacing={2}>
           {[1, 2, 3, 4].map((item) => (
-            <Grid item xs={12} sm={6} lg={4} key={item}>
+            <Grid item xs={12} sm={6} md={4} lg={3} xl={2} key={item}>
               <Skeleton variant="rectangular" height={180} sx={{ borderRadius: 2 }} />
             </Grid>
           ))}
         </Grid>
-      </Container>
+      </Box>
     );
   }
 
@@ -902,7 +902,7 @@ const Employees = () => {
           borderColor: 'divider',
         }}
       >
-        <Container maxWidth="xl">
+        <Container maxWidth={false} sx={{ maxWidth: '100%' }}>
           <Box 
             sx={{ 
               px: 2,
@@ -1084,13 +1084,12 @@ const Employees = () => {
       )}
 
       {/* Employees List/Grid */}
-      <Container 
-        maxWidth={false} 
+      <Box 
         sx={{ 
-          px: isMobile ? 1 : 2, 
+          px: isMobile ? 1 : 3, 
           pb: isMobile ? 8 : 4,
           height: '100%',
-          maxWidth: '100%',
+          width: '100%',
         }}
       >
         {filteredAndSortedEmployees.length === 0 ? (
@@ -1180,7 +1179,7 @@ const Employees = () => {
             })}
           </Grid>
         )}
-      </Container>
+      </Box>
 
       {/* Floating Action Button */}
       <Zoom in={true}>
