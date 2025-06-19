@@ -43,8 +43,6 @@ import {
   TrendingDown as TrendingDownIcon,
   AttachMoney as MoneyIcon,
   Work as WorkIcon,
-  Search as SearchIcon,
-  FilterList as FilterIcon,
   Sort as SortIcon,
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
@@ -75,7 +73,6 @@ const Employees = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedEmployeeForMenu, setSelectedEmployeeForMenu] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [filterStatus, setFilterStatus] = useState('all');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
@@ -102,12 +99,9 @@ const Employees = () => {
     }
   };
 
-  // Filter and sort employees
+  // Filter and sort employees (removed search functionality)
   const filteredAndSortedEmployees = React.useMemo(() => {
     let filtered = employees.filter(employee => {
-      const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase());
-      if (!matchesSearch) return false;
-
       if (filterStatus === 'all') return true;
       const totals = calculateEmployeeTotals(employee.id);
       if (filterStatus === 'outstanding') return totals.outstanding > 0;
@@ -129,7 +123,7 @@ const Employees = () => {
           return 0;
       }
     });
-  }, [employees, searchTerm, sortBy, filterStatus, calculateEmployeeTotals]);
+  }, [employees, sortBy, filterStatus, calculateEmployeeTotals]);
 
   const handleOpenDialog = (employee = null) => {
     if (employee) {
@@ -242,8 +236,8 @@ const Employees = () => {
   if (loading && !isInitialized) {
     return (
       <Box>
-        <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2, mb: 3 }} />
-        <Grid container spacing={2}>
+        <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2, mb: 4 }} />
+        <Grid container spacing={3}>
           {[1, 2, 3, 4].map((item) => (
             <Grid item xs={12} sm={6} lg={4} key={item}>
               <Skeleton variant="rectangular" height={180} sx={{ borderRadius: 2 }} />
@@ -268,22 +262,22 @@ const Employees = () => {
         <Paper 
           elevation={0}
           sx={{ 
-            p: { xs: 2, sm: 3 },
-            mb: { xs: 2, sm: 3 },
+            p: { xs: 3, sm: 4 },
+            mb: 4,
             background: 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)',
             borderRadius: 2,
           }}
         >
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Box>
               <Typography 
                 variant="h4" 
                 component="h1" 
                 sx={{ 
                   fontWeight: 700,
-                  fontSize: { xs: '1.5rem', sm: '2rem' },
+                  fontSize: { xs: '1.75rem', sm: '2.25rem' },
                   color: 'success.main',
-                  mb: { xs: 0.5, sm: 1 },
+                  mb: 1,
                 }}
               >
                 <PersonIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
@@ -293,19 +287,21 @@ const Employees = () => {
                 variant="body1" 
                 color="text.secondary"
                 sx={{ 
-                  fontSize: { xs: '0.875rem', sm: '1rem' },
+                  fontSize: { xs: '1rem', sm: '1.125rem' },
                 }}
               >
                 Manage your team and track their work
               </Typography>
             </Box>
             {!isMobile && (
-              <Stack direction="row" spacing={1}>
+              <Stack direction="row" spacing={2}>
                 <IconButton
                   onClick={handleRefresh}
                   sx={{ 
                     bgcolor: 'rgba(255,255,255,0.8)',
-                    '&:hover': { bgcolor: 'rgba(255,255,255,1)' }
+                    '&:hover': { bgcolor: 'rgba(255,255,255,1)' },
+                    width: 48,
+                    height: 48,
                   }}
                 >
                   <RefreshIcon />
@@ -319,6 +315,9 @@ const Employees = () => {
                   sx={{
                     background: 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)',
                     boxShadow: '0 4px 15px rgba(76, 175, 80, 0.3)',
+                    px: 3,
+                    py: 1.5,
+                    fontSize: '1rem',
                     '&:hover': {
                       background: 'linear-gradient(135deg, #388e3c 0%, #2e7d32 100%)',
                       transform: 'translateY(-2px)',
@@ -334,68 +333,63 @@ const Employees = () => {
           </Box>
 
           {/* Quick Stats */}
-          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+          <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', gap: 2 }}>
             <Chip 
               icon={<PersonIcon />} 
               label={`${totalStats.totalEmployees} Employees`} 
               color="primary" 
               variant="outlined"
-              size={isSmallMobile ? "small" : "medium"}
+              size="medium"
+              sx={{ fontSize: '0.875rem', px: 1 }}
             />
             <Chip 
               icon={<TrendingDownIcon />} 
               label={`${totalStats.needingAttention} Need Attention`} 
               color="error" 
               variant="outlined"
-              size={isSmallMobile ? "small" : "medium"}
+              size="medium"
+              sx={{ fontSize: '0.875rem', px: 1 }}
             />
             <Chip 
               icon={<MoneyIcon />} 
               label={`${formatCurrency(totalStats.totalOwed, settings.currency)} Owed`} 
               color="warning" 
               variant="outlined"
-              size={isSmallMobile ? "small" : "medium"}
+              size="medium"
+              sx={{ fontSize: '0.875rem', px: 1 }}
             />
             <Chip 
               icon={<MoneyIcon />} 
               label={`${formatCurrency(totalStats.totalPaid, settings.currency)} Paid`} 
               color="success" 
               variant="outlined"
-              size={isSmallMobile ? "small" : "medium"}
+              size="medium"
+              sx={{ fontSize: '0.875rem', px: 1 }}
             />
           </Stack>
         </Paper>
       </Grow>
 
-      {/* Search and Filter */}
-      <Fade in timeout={700}>
-        <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: { xs: 2, sm: 3 }, borderRadius: 2 }}>
-          <Stack 
-            direction={isMobile ? 'column' : 'row'} 
-            spacing={2} 
-            alignItems={isMobile ? 'stretch' : 'center'}
-          >
-            <TextField
-              placeholder="Search employees..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              size="small"
-              sx={{ flex: 1 }}
-              InputProps={{
-                startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
-              }}
-            />
-            <Stack direction="row" spacing={1}>
+      {/* Filter Controls - Simplified */}
+      {employees.length > 3 && (
+        <Fade in timeout={700}>
+          <Paper sx={{ p: 3, mb: 4, borderRadius: 2 }}>
+            <Stack 
+              direction={isMobile ? 'column' : 'row'} 
+              spacing={3} 
+              alignItems={isMobile ? 'stretch' : 'center'}
+              justifyContent="center"
+            >
               <TextField
                 select
-                label="Status"
+                label="Filter by Status"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                size="small"
-                sx={{ minWidth: 120 }}
+                size="medium"
+                sx={{ minWidth: 200 }}
               >
-                <MenuItem value="all">All</MenuItem>
-                <MenuItem value="outstanding">Outstanding</MenuItem>
+                <MenuItem value="all">All Employees</MenuItem>
+                <MenuItem value="outstanding">Outstanding Payments</MenuItem>
                 <MenuItem value="paid">Paid Up</MenuItem>
               </TextField>
               <TextField
@@ -403,43 +397,45 @@ const Employees = () => {
                 label="Sort by"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                size="small"
-                sx={{ minWidth: 120 }}
+                size="medium"
+                sx={{ minWidth: 200 }}
               >
-                <MenuItem value="name">Name</MenuItem>
-                <MenuItem value="rate">Daily Rate</MenuItem>
-                <MenuItem value="outstanding">Outstanding</MenuItem>
+                <MenuItem value="name">Name (A-Z)</MenuItem>
+                <MenuItem value="rate">Daily Rate (High to Low)</MenuItem>
+                <MenuItem value="outstanding">Outstanding Amount</MenuItem>
               </TextField>
             </Stack>
-          </Stack>
-        </Paper>
-      </Fade>
+          </Paper>
+        </Fade>
+      )}
 
       {/* Employees Grid */}
       {filteredAndSortedEmployees.length === 0 ? (
         <Fade in timeout={900}>
-          <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 2 }}>
-            <PersonIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-            <Typography variant="h6" color="text.secondary" gutterBottom>
-              {searchTerm || filterStatus !== 'all' ? 'No employees match your search' : 'No employees yet'}
+          <Paper sx={{ p: 6, textAlign: 'center', borderRadius: 2 }}>
+            <PersonIcon sx={{ fontSize: 80, color: 'text.secondary', mb: 3 }} />
+            <Typography variant="h5" color="text.secondary" gutterBottom sx={{ fontWeight: 600 }}>
+              {filterStatus !== 'all' ? 'No employees match your filter' : 'No employees yet'}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              {searchTerm || filterStatus !== 'all' ? 'Try adjusting your search or filters' : 'Add your first employee to get started'}
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 400, mx: 'auto' }}>
+              {filterStatus !== 'all' ? 'Try adjusting your filter settings above' : 'Add your first employee to get started with tracking payments and work schedules'}
             </Typography>
-            {(!searchTerm && filterStatus === 'all') && (
+            {filterStatus === 'all' && (
               <Button
                 variant="contained"
+                size="large"
                 startIcon={<AddIcon />}
                 onClick={() => handleOpenDialog()}
                 color="success"
+                sx={{ px: 4, py: 1.5 }}
               >
-                Add Employee
+                Add Your First Employee
               </Button>
             )}
           </Paper>
         </Fade>
       ) : (
-        <Grid container spacing={2}>
+        <Grid container spacing={3}>
           {filteredAndSortedEmployees.map((employee, index) => {
             const totals = calculateEmployeeTotals(employee.id);
             const progress = totals.totalOwed > 0 ? (totals.totalPaid / totals.totalOwed) * 100 : 100;
@@ -452,13 +448,14 @@ const Employees = () => {
                       cursor: 'pointer',
                       '&:hover': { 
                         transform: 'translateY(-4px)',
-                        boxShadow: 6,
+                        boxShadow: 8,
                       },
                       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                      borderRadius: 2,
+                      borderRadius: 3,
                       overflow: 'hidden',
                       position: 'relative',
                       background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+                      height: '100%',
                     }}
                     onClick={() => handleViewDetails(employee)}
                   >
@@ -467,7 +464,7 @@ const Employees = () => {
                       variant="determinate" 
                       value={Math.min(progress, 100)} 
                       sx={{ 
-                        height: 4,
+                        height: 6,
                         backgroundColor: 'rgba(0,0,0,0.1)',
                         '& .MuiLinearProgress-bar': {
                           background: progress >= 100 ? 
@@ -477,18 +474,18 @@ const Employees = () => {
                       }} 
                     />
                     
-                    <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
                           <Avatar 
                             sx={{ 
                               mr: 2,
                               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                              width: { xs: 40, sm: 48 },
-                              height: { xs: 40, sm: 48 },
-                              fontSize: { xs: '1rem', sm: '1.2rem' },
+                              width: 56,
+                              height: 56,
+                              fontSize: '1.25rem',
                               fontWeight: 600,
-                              boxShadow: 2,
+                              boxShadow: 3,
                             }}
                           >
                             {getInitials(employee.name)}
@@ -500,7 +497,7 @@ const Employees = () => {
                               sx={{ 
                                 fontWeight: 600, 
                                 mb: 0.5,
-                                fontSize: { xs: '1rem', sm: '1.25rem' },
+                                fontSize: '1.25rem',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
@@ -512,7 +509,7 @@ const Employees = () => {
                               variant="body2" 
                               color="text.secondary"
                               sx={{ 
-                                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                                fontSize: '0.875rem',
                                 fontWeight: 500,
                               }}
                             >
@@ -525,9 +522,8 @@ const Employees = () => {
                             e.stopPropagation();
                             handleMenuClick(e, employee);
                           }}
-                          size="small"
+                          size="medium"
                           sx={{ 
-                            ml: 1,
                             bgcolor: 'rgba(0,0,0,0.04)',
                             '&:hover': { bgcolor: 'rgba(0,0,0,0.08)' }
                           }}
@@ -537,19 +533,19 @@ const Employees = () => {
                       </Box>
 
                       {/* Stats Grid */}
-                      <Grid container spacing={1} sx={{ mb: 2 }}>
+                      <Grid container spacing={2} sx={{ mb: 3 }}>
                         <Grid item xs={6}>
                           <Box sx={{ 
                             textAlign: 'center', 
-                            p: 1.5, 
+                            p: 2, 
                             bgcolor: 'primary.light', 
-                            borderRadius: 1,
+                            borderRadius: 2,
                             boxShadow: 1,
                           }}>
                             <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.contrastText' }}>
                               {formatCurrency(totals.totalOwed, settings.currency)}
                             </Typography>
-                            <Typography variant="caption" sx={{ color: 'primary.contrastText', opacity: 0.8 }}>
+                            <Typography variant="caption" sx={{ color: 'primary.contrastText', opacity: 0.9 }}>
                               Total Owed
                             </Typography>
                           </Box>
@@ -557,15 +553,15 @@ const Employees = () => {
                         <Grid item xs={6}>
                           <Box sx={{ 
                             textAlign: 'center', 
-                            p: 1.5, 
+                            p: 2, 
                             bgcolor: 'success.light', 
-                            borderRadius: 1,
+                            borderRadius: 2,
                             boxShadow: 1,
                           }}>
                             <Typography variant="h6" sx={{ fontWeight: 600, color: 'success.contrastText' }}>
                               {formatCurrency(totals.totalPaid, settings.currency)}
                             </Typography>
-                            <Typography variant="caption" sx={{ color: 'success.contrastText', opacity: 0.8 }}>
+                            <Typography variant="caption" sx={{ color: 'success.contrastText', opacity: 0.9 }}>
                               Total Paid
                             </Typography>
                           </Box>
@@ -574,17 +570,17 @@ const Employees = () => {
 
                       {/* Outstanding Amount */}
                       <Box sx={{ textAlign: 'center' }}>
-                        <Typography variant="caption" color="text.secondary" display="block">
+                        <Typography variant="body2" color="text.secondary" display="block" sx={{ mb: 1 }}>
                           {totals.outstanding < 0 ? 'In Credit' : 'Outstanding'}
                         </Typography>
                         <Chip
                           label={formatCurrency(Math.abs(totals.outstanding), settings.currency)}
                           color={getStatusColor(totals.outstanding)}
-                          size="small"
+                          size="medium"
                           sx={{ 
-                            fontWeight: 600, 
-                            mt: 0.5,
-                            boxShadow: 1,
+                            fontWeight: 600,
+                            fontSize: '0.875rem',
+                            boxShadow: 2,
                           }}
                         />
                       </Box>
@@ -610,6 +606,8 @@ const Employees = () => {
               bottom: 80,
               right: 16,
               background: 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)',
+              width: 64,
+              height: 64,
               '&:hover': {
                 background: 'linear-gradient(135deg, #388e3c 0%, #2e7d32 100%)',
                 transform: 'scale(1.1)',
@@ -617,7 +615,7 @@ const Employees = () => {
               transition: 'all 0.3s ease',
             }}
           >
-            {submitting ? <CircularProgress size={24} color="inherit" /> : <AddIcon />}
+            {submitting ? <CircularProgress size={24} color="inherit" /> : <AddIcon sx={{ fontSize: '1.5rem' }} />}
           </Fab>
         </Slide>
       )}
@@ -633,22 +631,23 @@ const Employees = () => {
           sx: {
             borderRadius: 2,
             boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+            minWidth: 180,
           }
         }}
       >
-        <MenuItem onClick={() => handleViewDetails(selectedEmployeeForMenu)}>
+        <MenuItem onClick={() => handleViewDetails(selectedEmployeeForMenu)} sx={{ py: 1.5 }}>
           <ListItemIcon>
             <VisibilityIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>View Details</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleEdit(selectedEmployeeForMenu)}>
+        <MenuItem onClick={() => handleEdit(selectedEmployeeForMenu)} sx={{ py: 1.5 }}>
           <ListItemIcon>
             <EditIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Edit</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleDelete(selectedEmployeeForMenu)} sx={{ color: 'error.main' }}>
+        <MenuItem onClick={() => handleDelete(selectedEmployeeForMenu)} sx={{ color: 'error.main', py: 1.5 }}>
           <ListItemIcon>
             <DeleteIcon fontSize="small" color="error" />
           </ListItemIcon>
@@ -665,13 +664,13 @@ const Employees = () => {
         TransitionComponent={Slide}
         TransitionProps={{ direction: 'up' }}
       >
-        <DialogTitle>
+        <DialogTitle sx={{ pb: 2 }}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
             {editingEmployee ? 'Edit Employee' : 'Add New Employee'}
           </Typography>
         </DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
+        <DialogContent sx={{ pb: 2 }}>
+          <Stack spacing={3} sx={{ mt: 2 }}>
             <TextField
               label="Employee Name"
               value={formData.name}
@@ -680,6 +679,7 @@ const Employees = () => {
               required
               disabled={submitting}
               autoFocus
+              size="medium"
             />
             <TextField
               label="Daily Rate"
@@ -689,9 +689,10 @@ const Employees = () => {
               fullWidth
               required
               disabled={submitting}
+              size="medium"
               InputProps={{
                 startAdornment: (
-                  <Typography variant="body2" sx={{ mr: 1 }}>
+                  <Typography variant="body1" sx={{ mr: 1 }}>
                     {settings.currency === 'GBP' ? '£' : '$'}
                   </Typography>
                 ),
@@ -699,8 +700,8 @@ const Employees = () => {
             />
           </Stack>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} disabled={submitting}>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={handleCloseDialog} disabled={submitting} size="large">
             Cancel
           </Button>
           <Button 
@@ -708,8 +709,9 @@ const Employees = () => {
             variant="contained"
             disabled={!formData.name || !formData.dailyRate || submitting}
             startIcon={submitting ? <CircularProgress size={16} /> : null}
+            size="large"
           >
-            {submitting ? 'Saving...' : editingEmployee ? 'Update' : 'Add Employee'}
+            {submitting ? 'Saving...' : editingEmployee ? 'Update Employee' : 'Add Employee'}
           </Button>
         </DialogActions>
       </Dialog>
