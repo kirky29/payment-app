@@ -51,8 +51,11 @@ const EmployeeCard = ({ employee, totals, onViewDetails, onMenuClick, index }) =
     <Card 
       sx={{ 
         height: '100%',
+        width: '100%',
         cursor: 'pointer',
         transition: 'all 0.2s ease',
+        display: 'flex',
+        flexDirection: 'column',
         '&:hover': { 
           transform: 'translateY(-4px)',
           boxShadow: 4,
@@ -62,7 +65,7 @@ const EmployeeCard = ({ employee, totals, onViewDetails, onMenuClick, index }) =
       }}
       onClick={() => onViewDetails(employee)}
     >
-      <CardContent sx={{ p: 3 }}>
+      <CardContent sx={{ p: 3, flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 0 }}>
             <Avatar 
@@ -371,10 +374,11 @@ const Employees = () => {
             display: 'grid',
             gridTemplateColumns: {
               xs: '1fr',
-              sm: 'repeat(auto-fit, minmax(300px, 1fr))',
+              sm: 'repeat(auto-fill, minmax(320px, 1fr))',
             },
             gap: isMobile ? 2 : 3,
             width: '100%',
+            alignItems: 'stretch',
           }}>
             {filteredEmployees.map((employee, index) => {
               const totals = calculateEmployeeTotals(employee.id);
