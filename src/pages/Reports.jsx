@@ -6,9 +6,6 @@ import {
   CardContent,
   Grid,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
   MenuItem,
   Table,
   TableBody,
@@ -18,10 +15,18 @@ import {
   TableRow,
   Paper,
   Chip,
-  Tabs,
-  Tab,
   Avatar,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
+import {
+  TrendingUp as TrendingUpIcon,
+  TrendingDown as TrendingDownIcon,
+  AccountBalance as AccountBalanceIcon,
+  Payment as PaymentIcon,
+  Work as WorkIcon,
+  AttachMoney as MoneyIcon,
+} from '@mui/icons-material';
 import {
   BarChart,
   Bar,
@@ -34,103 +39,73 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
 } from 'recharts';
 import { useApp } from '../contexts/AppContext';
 import { formatCurrency } from '../utils/currency';
-import { format } from 'date-fns';
 import { alpha } from '@mui/material/styles';
 
 const Reports = () => {
   const { employees, workDays, payments, calculateEmployeeTotals, settings } = useApp();
-  const [activeTab, setActiveTab] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [filterPaymentMethod, setFilterPaymentMethod] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterEmployee, setFilterEmployee] = useState('all');
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Filter employees based on search term
-  const filteredEmployees = useMemo(() => {
-    return employees.filter(employee =>
-      employee.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [employees, searchTerm]);
 
   // Calculate overall statistics
-  const overallStats = useMemo(() => {
+  const totals = useMemo(() => {
     let totalOwed = 0;
     let totalPaid = 0;
-    let totalWorkDays = 0;
-    let totalPayments = 0;
+    let outstanding = 0;
 
     employees.forEach(employee => {
-      const totals = calculateEmployeeTotals(employee.id);
-      totalOwed += totals.totalOwed;
-      totalPaid += totals.totalPaid;
+      const empTotals = calculateEmployeeTotals(employee.id);
+      totalOwed += empTotals.totalOwed;
+      totalPaid += empTotals.totalPaid;
+      outstanding += empTotals.outstanding;
     });
-
-    totalWorkDays = workDays.length;
-    totalPayments = payments.length;
 
     return {
       totalOwed,
       totalPaid,
-      outstanding: totalOwed - totalPaid,
-      totalWorkDays,
-      totalPayments,
+      outstanding,
+      totalWorkDays: workDays.length,
     };
-  }, [employees, workDays, payments, calculateEmployeeTotals]);
+  }, [employees, workDays, calculateEmployeeTotals]);
 
   // Payment method breakdown
+  const paymentMethods = ['Cash', 'Check', 'Bank Transfer', 'PayPal', 'Other'];
   const paymentMethodData = useMemo(() => {
     const methodCounts = {};
     payments.forEach(payment => {
-      methodCounts[payment.paymentMethod] = (methodCounts[payment.paymentMethod] || 0) + 1;
+      const method = payment.paymentMethod || 'Other';
+      methodCounts[method] = (methodCounts[method] || 0) + payment.amount;
     });
 
-    return Object.entries(methodCounts).map(([method, count]) => ({
+    return Object.entries(methodCounts).map(([method, amount]) => ({
       name: method,
-      value: count,
+      value: amount,
     }));
   }, [payments]);
 
-  // Employee performance data for chart
-  const employeeChartData = useMemo(() => {
-    return filteredEmployees.map(employee => {
-      const totals = calculateEmployeeTotals(employee.id);
+  // Employee performance data
+  const employeePerformanceData = useMemo(() => {
+    return employees.map(employee => {
+      const empTotals = calculateEmployeeTotals(employee.id);
+      const workDaysCount = workDays.filter(wd => wd.employeeId === employee.id).length;
       return {
+        id: employee.id,
         name: employee.name,
-        owed: totals.totalOwed,
-        paid: totals.totalPaid,
-        outstanding: totals.outstanding,
+        workDays: workDaysCount,
+        totalOwed: empTotals.totalOwed,
+        totalPaid: empTotals.totalPaid,
+        outstanding: empTotals.outstanding,
+        earned: empTotals.totalPaid,
       };
     });
-  }, [filteredEmployees, calculateEmployeeTotals]);
+  }, [employees, workDays, calculateEmployeeTotals]);
 
-  // Monthly payment data
-  const monthlyPaymentData = useMemo(() => {
-    const monthlyData = {};
-    
-    payments.forEach(payment => {
-      const date = new Date(payment.date);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      
-      if (!monthlyData[monthKey]) {
-        monthlyData[monthKey] = { month: monthKey, amount: 0, count: 0 };
-      }
-      
-      monthlyData[monthKey].amount += payment.amount;
-      monthlyData[monthKey].count += 1;
-    });
-
-    return Object.values(monthlyData).sort((a, b) => a.month.localeCompare(b.month));
-  }, [payments]);
-
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+  const COLORS = ['#1976d2', '#4caf50', '#ff9800', '#f44336', '#9c27b0'];
 
   return (
     <Box>
@@ -150,7 +125,7 @@ const Reports = () => {
           sx={{ 
             fontWeight: 700,
             fontSize: { xs: '1.5rem', sm: '2rem' },
-            mb: { xs: 1, sm: 2 },
+            mb: { xs: 0.5, sm: 1 },
           }}
         >
           Reports & Analytics
@@ -173,7 +148,7 @@ const Reports = () => {
           mb: { xs: 2, sm: 3 },
           display: 'flex',
           flexDirection: { xs: 'column', sm: 'row' },
-          gap: { xs: 1, sm: 2 },
+          gap: { xs: 1.5, sm: 2 },
           alignItems: { xs: 'stretch', sm: 'center' },
         }}
       >
@@ -182,11 +157,9 @@ const Reports = () => {
           label="Payment Method"
           value={filterPaymentMethod}
           onChange={(e) => setFilterPaymentMethod(e.target.value)}
+          size="small"
           sx={{ 
             minWidth: { xs: '100%', sm: 200 },
-            '& .MuiInputBase-root': {
-              height: '40px',
-            },
           }}
         >
           <MenuItem value="all">All Methods</MenuItem>
@@ -200,11 +173,9 @@ const Reports = () => {
           label="Status"
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
+          size="small"
           sx={{ 
             minWidth: { xs: '100%', sm: 200 },
-            '& .MuiInputBase-root': {
-              height: '40px',
-            },
           }}
         >
           <MenuItem value="all">All Status</MenuItem>
@@ -217,11 +188,9 @@ const Reports = () => {
           label="Employee"
           value={filterEmployee}
           onChange={(e) => setFilterEmployee(e.target.value)}
+          size="small"
           sx={{ 
             minWidth: { xs: '100%', sm: 200 },
-            '& .MuiInputBase-root': {
-              height: '40px',
-            },
           }}
         >
           <MenuItem value="all">All Employees</MenuItem>
@@ -233,70 +202,75 @@ const Reports = () => {
 
       {/* Stats Grid */}
       <Grid container spacing={2} sx={{ mb: { xs: 2, sm: 3 } }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={6} sm={3}>
           <StatsCard
             title="Total Owed"
-            value={formatCurrency(overallStats.totalOwed, settings.currency)}
-            icon={<MoneyIcon />}
-            color="primary"
+            value={formatCurrency(totals.totalOwed, settings.currency)}
+            icon={<TrendingUpIcon />}
+            color="warning"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={6} sm={3}>
           <StatsCard
             title="Total Paid"
-            value={formatCurrency(overallStats.totalPaid, settings.currency)}
+            value={formatCurrency(totals.totalPaid, settings.currency)}
             icon={<PaymentIcon />}
             color="success"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={6} sm={3}>
           <StatsCard
             title="Outstanding"
-            value={formatCurrency(overallStats.outstanding, settings.currency)}
+            value={formatCurrency(totals.outstanding, settings.currency)}
             icon={<AccountBalanceIcon />}
-            color="warning"
+            color={totals.outstanding > 0 ? "error" : "success"}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={6} sm={3}>
           <StatsCard
             title="Work Days"
-            value={overallStats.totalWorkDays.toString()}
+            value={totals.totalWorkDays.toString()}
             icon={<WorkIcon />}
-            color="info"
+            color="primary"
           />
         </Grid>
       </Grid>
 
       {/* Charts Section */}
-      <Grid container spacing={2}>
-        {/* Payment Timeline Chart */}
-        <Grid item xs={12}>
-          <Card sx={{ mb: { xs: 2, sm: 3 } }}>
+      <Grid container spacing={2} sx={{ mb: { xs: 2, sm: 3 } }}>
+        {/* Employee Performance Chart */}
+        <Grid item xs={12} md={8}>
+          <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
-                Payment Timeline
+                Employee Performance
               </Typography>
-              <Box sx={{ height: { xs: 300, sm: 400 } }}>
+              <Box sx={{ height: { xs: 250, sm: 300 } }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={timelineData}>
+                  <BarChart data={employeePerformanceData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
-                      dataKey="date" 
-                      tick={{ fontSize: 12 }}
-                      tickFormatter={(value) => format(new Date(value), 'MMM d')}
+                      dataKey="name" 
+                      tick={{ fontSize: isMobile ? 10 : 12 }}
+                      interval={0}
+                      angle={isMobile ? -45 : 0}
+                      textAnchor={isMobile ? "end" : "middle"}
+                      height={isMobile ? 60 : 40}
                     />
                     <YAxis 
-                      tick={{ fontSize: 12 }}
-                      tickFormatter={(value) => formatCurrency(value, settings.currency, true)}
+                      tick={{ fontSize: isMobile ? 10 : 12 }}
+                      tickFormatter={(value) => `${settings.currency === 'GBP' ? '£' : '$'}${value}`}
                     />
                     <Tooltip 
-                      formatter={(value) => formatCurrency(value, settings.currency)}
-                      labelFormatter={(value) => format(new Date(value), 'MMMM d, yyyy')}
+                      formatter={(value, name) => [
+                        formatCurrency(value, settings.currency),
+                        name === 'earned' ? 'Total Paid' : name === 'outstanding' ? 'Outstanding' : name
+                      ]}
                     />
                     <Legend />
-                    <Line type="monotone" dataKey="paid" name="Paid" stroke="#4caf50" strokeWidth={2} />
-                    <Line type="monotone" dataKey="owed" name="Owed" stroke="#f57c00" strokeWidth={2} />
-                  </LineChart>
+                    <Bar dataKey="earned" name="Total Paid" fill="#4caf50" />
+                    <Bar dataKey="outstanding" name="Outstanding" fill="#ff9800" />
+                  </BarChart>
                 </ResponsiveContainer>
               </Box>
             </CardContent>
@@ -304,13 +278,13 @@ const Reports = () => {
         </Grid>
 
         {/* Payment Methods Chart */}
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={4}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                 Payment Methods
               </Typography>
-              <Box sx={{ height: { xs: 300, sm: 400 } }}>
+              <Box sx={{ height: { xs: 250, sm: 300 } }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -321,9 +295,9 @@ const Reports = () => {
                       label={({ name, percent }) => 
                         isMobile ? 
                         `${(percent * 100).toFixed(0)}%` : 
-                        `${name} ${(percent * 100).toFixed(0)}%`
+                        `${name}: ${(percent * 100).toFixed(0)}%`
                       }
-                      outerRadius="80%"
+                      outerRadius={isMobile ? 60 : 80}
                       fill="#8884d8"
                       dataKey="value"
                     >
@@ -331,49 +305,8 @@ const Reports = () => {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip />
-                    <Legend 
-                      layout={isMobile ? "horizontal" : "vertical"}
-                      align={isMobile ? "center" : "right"}
-                      verticalAlign={isMobile ? "bottom" : "middle"}
-                    />
+                    <Tooltip formatter={(value) => formatCurrency(value, settings.currency)} />
                   </PieChart>
-                </ResponsiveContainer>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Employee Performance Chart */}
-        <Grid item xs={12} md={6}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
-                Employee Performance
-              </Typography>
-              <Box sx={{ height: { xs: 300, sm: 400 } }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={employeeChartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="name" 
-                      tick={{ fontSize: 12 }}
-                      interval={0}
-                      angle={-45}
-                      textAnchor="end"
-                      height={60}
-                    />
-                    <YAxis 
-                      tick={{ fontSize: 12 }}
-                      tickFormatter={(value) => formatCurrency(value, settings.currency, true)}
-                    />
-                    <Tooltip 
-                      formatter={(value) => formatCurrency(value, settings.currency)}
-                    />
-                    <Legend />
-                    <Bar dataKey="owed" name="Total Owed" fill="#8884d8" />
-                    <Bar dataKey="paid" name="Total Paid" fill="#82ca9d" />
-                  </BarChart>
                 </ResponsiveContainer>
               </Box>
             </CardContent>
@@ -381,8 +314,8 @@ const Reports = () => {
         </Grid>
       </Grid>
 
-      {/* Employee Table */}
-      <Card sx={{ mt: { xs: 2, sm: 3 } }}>
+      {/* Employee Summary Table */}
+      <Card>
         <CardContent sx={{ p: { xs: 1, sm: 2 } }}>
           <Typography variant="h6" gutterBottom sx={{ px: { xs: 1, sm: 0 }, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
             Employee Summary
@@ -392,31 +325,50 @@ const Reports = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>Employee</TableCell>
-                  <TableCell align="right">Work Days</TableCell>
-                  <TableCell align="right">Total Owed</TableCell>
-                  <TableCell align="right">Total Paid</TableCell>
+                  {!isMobile && <TableCell align="right">Work Days</TableCell>}
+                  <TableCell align="right">Owed</TableCell>
+                  <TableCell align="right">Paid</TableCell>
                   <TableCell align="right">Outstanding</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {employeeSummary.map((row) => (
+                {employeePerformanceData.map((row) => (
                   <TableRow key={row.id}>
                     <TableCell component="th" scope="row">
-                      {row.name}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Avatar sx={{ width: 32, height: 32, fontSize: '0.875rem' }}>
+                          {row.name.charAt(0)}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {row.name}
+                          </Typography>
+                          {isMobile && (
+                            <Typography variant="caption" color="text.secondary">
+                              {row.workDays} days
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
                     </TableCell>
-                    <TableCell align="right">{row.workDays}</TableCell>
-                    <TableCell align="right">{formatCurrency(row.totalOwed, settings.currency)}</TableCell>
-                    <TableCell align="right">{formatCurrency(row.totalPaid, settings.currency)}</TableCell>
-                    <TableCell 
-                      align="right"
-                      sx={{ 
-                        color: row.outstanding > 0 ? 'warning.main' : 
-                               row.outstanding < 0 ? 'success.main' : 
-                               'text.primary',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {formatCurrency(row.outstanding, settings.currency)}
+                    {!isMobile && <TableCell align="right">{row.workDays}</TableCell>}
+                    <TableCell align="right">
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {formatCurrency(row.totalOwed, settings.currency)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Typography variant="body2" sx={{ color: 'success.main', fontWeight: 600 }}>
+                        {formatCurrency(row.totalPaid, settings.currency)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Chip
+                        label={formatCurrency(Math.abs(row.outstanding), settings.currency)}
+                        color={row.outstanding > 0 ? 'error' : row.outstanding < 0 ? 'info' : 'success'}
+                        size="small"
+                        sx={{ fontWeight: 600 }}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -433,28 +385,34 @@ const StatsCard = ({ title, value, icon, color }) => (
   <Card
     sx={{
       height: '100%',
-      background: `linear-gradient(135deg, ${alpha(`${color}.main`, 0.1)} 0%, ${alpha(`${color}.dark`, 0.1)} 100%)`,
+      background: `linear-gradient(135deg, ${alpha(theme => theme.palette[color]?.main || '#1976d2', 0.1)} 0%, ${alpha(theme => theme.palette[color]?.dark || '#1565c0', 0.1)} 100%)`,
       border: 1,
       borderColor: `${color}.main`,
       borderRadius: 2,
     }}
   >
     <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
         <Avatar
           sx={{
             bgcolor: `${color}.main`,
-            width: { xs: 40, sm: 48 },
-            height: { xs: 40, sm: 48 },
+            width: { xs: 32, sm: 40 },
+            height: { xs: 32, sm: 40 },
+            '& .MuiSvgIcon-root': {
+              fontSize: { xs: '1rem', sm: '1.25rem' },
+            },
           }}
         >
           {icon}
         </Avatar>
-        <Box>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
           <Typography 
             variant="body2" 
             color="text.secondary"
-            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+            sx={{ 
+              fontSize: { xs: '0.7rem', sm: '0.875rem' },
+              lineHeight: 1.2,
+            }}
           >
             {title}
           </Typography>
@@ -463,7 +421,8 @@ const StatsCard = ({ title, value, icon, color }) => (
             sx={{ 
               fontWeight: 600,
               color: `${color}.main`,
-              fontSize: { xs: '1.1rem', sm: '1.25rem' },
+              fontSize: { xs: '1rem', sm: '1.25rem' },
+              lineHeight: 1.2,
             }}
           >
             {value}

@@ -1,56 +1,38 @@
 import React, { useState } from 'react';
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
-  Button,
-  Grid,
   Paper,
-  useTheme,
-  useMediaQuery,
-  Container,
-  Chip,
-  Avatar,
-  LinearProgress,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
+  Grid,
+  Button,
   IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
   MenuItem,
-  ToggleButton,
-  ToggleButtonGroup,
+  Chip,
+  Avatar,
+  Card,
+  CardContent,
   Stack,
+  useTheme,
+  useMediaQuery,
+  Fab,
 } from '@mui/material';
 import {
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
   Add as AddIcon,
   Work as WorkIcon,
   Payment as PaymentIcon,
-  Person as PersonIcon,
-  CalendarToday as CalendarIcon,
-  TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  ViewModule as ViewModuleIcon,
-  ViewWeek as ViewWeekIcon,
-  ViewList as ViewListIcon,
-  ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon,
+  Today as TodayIcon,
+  Event as EventIcon,
 } from '@mui/icons-material';
 import { useApp } from '../contexts/AppContext';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, isSameMonth, startOfWeek, endOfWeek, addMonths, subMonths } from 'date-fns';
-import { formatCurrency, getCurrencySymbol } from '../utils/currency';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
+import { formatCurrency } from '../utils/currency';
 
 const Calendar = () => {
   const { 
@@ -65,16 +47,17 @@ const Calendar = () => {
     unmarkWorkDayAsPaid,
     settings 
   } = useApp();
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [openWorkDayDialog, setOpenWorkDayDialog] = useState(false);
   const [openPaymentDialog, setOpenPaymentDialog] = useState(false);
   const [editingWorkDay, setEditingWorkDay] = useState(null);
   const [editingPayment, setEditingPayment] = useState(null);
-  
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const [workDayForm, setWorkDayForm] = useState({
     employeeId: '',
@@ -87,192 +70,13 @@ const Calendar = () => {
     employeeId: '',
     date: format(new Date(), 'yyyy-MM-dd'),
     amount: '',
+    paymentMethod: 'Cash',
     notes: '',
   });
 
-  // Add new state for view mode
-  const [viewMode, setViewMode] = useState('month'); // 'month', 'week', or 'list'
-
-  // Add touch handling for month navigation
-  const [touchStart, setTouchStart] = React.useState(null);
-  const [touchEnd, setTouchEnd] = React.useState(null);
-
-  const getInitials = (name) => {
-    return name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '';
-  };
-
-  const getDaysInMonth = () => {
-    const start = startOfMonth(currentDate);
-    const end = endOfMonth(currentDate);
-    return eachDayOfInterval({ start, end });
-  };
-
-  const getEventsForDate = (date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    const dayWorkDays = workDays.filter(day => day.date === dateStr);
-    const dayPayments = payments.filter(payment => payment.date === dateStr);
-    return { workDays: dayWorkDays, payments: dayPayments };
-  };
-
-  const getEmployeeById = (id) => {
-    return employees.find(emp => emp.id === id);
-  };
-
-  const handleDateClick = (date) => {
-    setSelectedDate(date);
-    setWorkDayForm(prev => ({ ...prev, date: format(date, 'yyyy-MM-dd') }));
-    setPaymentForm(prev => ({ ...prev, date: format(date, 'yyyy-MM-dd') }));
-  };
-
-  const handleWorkDaySubmit = async () => {
-    if (!workDayForm.employeeId || !workDayForm.date || !workDayForm.dailyRate) return;
-
-    const workDayData = {
-      employeeId: workDayForm.employeeId,
-      date: workDayForm.date,
-      dailyRate: parseFloat(workDayForm.dailyRate),
-      notes: workDayForm.notes.trim(),
-    };
-
-    if (editingWorkDay) {
-      // Update existing work day
-      await updateWorkDay(editingWorkDay.id, workDayData);
-    } else {
-      // Add new work day
-      await addWorkDay(workDayData);
-    }
-
-    setOpenWorkDayDialog(false);
-    setEditingWorkDay(null);
-    setWorkDayForm({
-      employeeId: '',
-      date: format(new Date(), 'yyyy-MM-dd'),
-      dailyRate: '',
-      notes: '',
-    });
-  };
-
-  const handlePaymentSubmit = async () => {
-    if (!paymentForm.employeeId || !paymentForm.date || !paymentForm.amount) return;
-
-    const paymentData = {
-      employeeId: paymentForm.employeeId,
-      date: paymentForm.date,
-      amount: parseFloat(paymentForm.amount),
-      notes: paymentForm.notes.trim(),
-    };
-
-    if (editingPayment) {
-      // Update existing payment
-      await updatePayment(editingPayment.id, paymentData);
-    } else {
-      // Add new payment
-      await addPayment(paymentData);
-    }
-
-    setOpenPaymentDialog(false);
-    setEditingPayment(null);
-    setPaymentForm({
-      employeeId: '',
-      date: format(new Date(), 'yyyy-MM-dd'),
-      amount: '',
-      notes: '',
-    });
-  };
-
-  const handleEditWorkDay = (workDay) => {
-    setEditingWorkDay(workDay);
-    setWorkDayForm({
-      employeeId: workDay.employeeId,
-      date: workDay.date,
-      dailyRate: workDay.dailyRate?.toString() || (workDay.hours ? (workDay.hours * (getEmployeeById(workDay.employeeId)?.dailyRate || 0)).toString() : ''),
-      notes: workDay.notes || '',
-    });
-    setOpenWorkDayDialog(true);
-  };
-
-  const handleEditPayment = (payment) => {
-    setEditingPayment(payment);
-    setPaymentForm({
-      employeeId: payment.employeeId,
-      date: payment.date,
-      amount: payment.amount.toString(),
-      notes: payment.notes || '',
-    });
-    setOpenPaymentDialog(true);
-  };
-
-  const handleDeleteWorkDay = async (workDay) => {
-    if (window.confirm('Are you sure you want to delete this work day?')) {
-      await deleteWorkDay(workDay.id);
-    }
-  };
-
-  const handleDeletePayment = async (payment) => {
-    if (window.confirm('Are you sure you want to delete this payment?')) {
-      await deletePayment(payment.id);
-    }
-  };
-
-  const navigateMonth = (direction) => {
-    setCurrentDate(prev => {
-      const newDate = new Date(prev);
-      newDate.setMonth(prev.getMonth() + direction);
-      return newDate;
-    });
-  };
-
-  const getMonthStats = () => {
-    const monthStart = startOfMonth(currentDate);
-    const monthEnd = endOfMonth(currentDate);
-    const monthWorkDays = workDays.filter(day => {
-      const dayDate = new Date(day.date);
-      return isSameMonth(dayDate, currentDate);
-    });
-    const monthPayments = payments.filter(payment => {
-      const paymentDate = new Date(payment.date);
-      return isSameMonth(paymentDate, currentDate);
-    });
-
-    const totalDays = monthWorkDays.length;
-    const totalPayments = monthPayments.reduce((sum, payment) => sum + payment.amount, 0);
-    const totalOwed = monthWorkDays.reduce((sum, day) => {
-      const employee = getEmployeeById(day.employeeId);
-      if (day.dailyRate !== undefined) {
-        return sum + (day.dailyRate || 0);
-      } else {
-        return sum + ((day.hours || 0) * (employee?.dailyRate || 0));
-      }
-    }, 0);
-
-    return { totalDays, totalPayments, totalOwed, workDaysCount: monthWorkDays.length, paymentsCount: monthPayments.length };
-  };
-
-  const monthStats = getMonthStats();
-
-  // Handle view mode change
-  const handleViewModeChange = (event, newMode) => {
-    if (newMode !== null) {
-      setViewMode(newMode);
-    }
-  };
-
-  // Get days based on current view mode
-  const getDays = () => {
-    switch (viewMode) {
-      case 'week':
-        const weekStart = startOfWeek(currentDate);
-        const weekEnd = endOfWeek(currentDate);
-        return eachDayOfInterval({ start: weekStart, end: weekEnd });
-      case 'list':
-        return getDaysInMonth().filter(date => {
-          const events = getEventsForDate(date);
-          return events.workDays.length > 0 || events.payments.length > 0;
-        });
-      default:
-        return getDaysInMonth();
-    }
-  };
+  // Touch handling for swipe navigation
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
 
   const handleTouchStart = (e) => {
     setTouchEnd(null);
@@ -298,226 +102,118 @@ const Calendar = () => {
     }
   };
 
-  // Add new function to handle marking a work day as paid
-  const handleMarkAsPaid = async (workDay) => {
-    if (window.confirm(`Mark ${getEmployeeById(workDay.employeeId)?.name}'s work day as paid?`)) {
-      const paymentData = {
-        paidDate: new Date().toISOString(),
-        paymentMethod: 'Manual',
-        paymentNotes: 'Marked as paid from calendar view'
-      };
-      await markWorkDayAsPaid(workDay.id, paymentData);
+  const getInitials = (name) => {
+    return name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '';
+  };
+
+  const getDaysInMonth = () => {
+    const start = startOfMonth(currentDate);
+    const end = endOfMonth(currentDate);
+    const startWeek = startOfWeek(start);
+    const endWeek = endOfWeek(end);
+    return eachDayOfInterval({ start: startWeek, end: endWeek });
+  };
+
+  const getEventsForDate = (date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const dayWorkDays = workDays.filter(day => day.date === dateStr);
+    const dayPayments = payments.filter(payment => payment.date === dateStr);
+    return { workDays: dayWorkDays, payments: dayPayments };
+  };
+
+  const getEmployeeById = (id) => {
+    return employees.find(emp => emp.id === id);
+  };
+
+  const handleDateClick = (date) => {
+    setSelectedDate(date);
+    const dateStr = format(date, 'yyyy-MM-dd');
+    setWorkDayForm(prev => ({ ...prev, date: dateStr }));
+    setPaymentForm(prev => ({ ...prev, date: dateStr }));
+  };
+
+  const handleAddWorkDay = () => {
+    setSelectedDate(selectedDate || new Date());
+    const dateStr = format(selectedDate || new Date(), 'yyyy-MM-dd');
+    setWorkDayForm({
+      employeeId: '',
+      date: dateStr,
+      dailyRate: '',
+      notes: '',
+    });
+    setEditingWorkDay(null);
+    setOpenWorkDayDialog(true);
+  };
+
+  const handleAddPayment = () => {
+    setSelectedDate(selectedDate || new Date());
+    const dateStr = format(selectedDate || new Date(), 'yyyy-MM-dd');
+    setPaymentForm({
+      employeeId: '',
+      date: dateStr,
+      amount: '',
+      paymentMethod: 'Cash',
+      notes: '',
+    });
+    setEditingPayment(null);
+    setOpenPaymentDialog(true);
+  };
+
+  const handleSubmitWorkDay = async () => {
+    if (!workDayForm.employeeId || !workDayForm.date) return;
+    
+    const employee = getEmployeeById(workDayForm.employeeId);
+    const workDayData = {
+      employeeId: workDayForm.employeeId,
+      date: workDayForm.date,
+      dailyRate: parseFloat(workDayForm.dailyRate) || employee?.dailyRate || 0,
+      notes: workDayForm.notes,
+      isPaid: false,
+    };
+
+    try {
+      await addWorkDay(workDayData);
+      setOpenWorkDayDialog(false);
+    } catch (error) {
+      console.error('Error adding work day:', error);
     }
   };
 
-  // Add new function to handle unmarking a work day as paid
-  const handleUnmarkAsPaid = async (workDay) => {
-    if (window.confirm(`Unmark ${getEmployeeById(workDay.employeeId)?.name}'s work day as paid?`)) {
-      await unmarkWorkDayAsPaid(workDay.id);
+  const handleSubmitPayment = async () => {
+    if (!paymentForm.employeeId || !paymentForm.date || !paymentForm.amount) return;
+    
+    const paymentData = {
+      employeeId: paymentForm.employeeId,
+      date: paymentForm.date,
+      amount: parseFloat(paymentForm.amount),
+      paymentMethod: paymentForm.paymentMethod,
+      notes: paymentForm.notes,
+    };
+
+    try {
+      await addPayment(paymentData);
+      setOpenPaymentDialog(false);
+    } catch (error) {
+      console.error('Error adding payment:', error);
     }
   };
 
-  // Updated WorkDayCard component
-  const WorkDayCard = ({ workDay, employee }) => {
-    const isPaid = workDay.isPaid;
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-    return (
-      <Paper
-        elevation={3}
-        sx={{
-          p: 2.5,
-          mb: 2,
-          borderRadius: '16px',
-          border: '1px solid',
-          borderColor: isPaid ? 'success.light' : 'warning.light',
-          background: isPaid 
-            ? 'linear-gradient(145deg, #e8f5e9 0%, #c8e6c9 100%)'
-            : 'linear-gradient(145deg, #fff8e1 0%, #ffe0b2 100%)',
-          width: '100%',
-          transition: 'all 0.3s ease',
-          '&:hover': {
-            transform: 'translateY(-3px)',
-            boxShadow: theme.shadows[8],
-          },
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2.5 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
-            <Avatar 
-              sx={{ 
-                width: 56, 
-                height: 56, 
-                bgcolor: isPaid ? 'success.main' : 'warning.main',
-                boxShadow: 3,
-                border: '2px solid',
-                borderColor: isPaid ? 'success.light' : 'warning.light',
-              }}
-            >
-              {getInitials(employee?.name || '')}
-            </Avatar>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, color: 'text.primary' }}>
-                {employee?.name}
-              </Typography>
-              <Typography 
-                variant="body1" 
-                sx={{ 
-                  color: 'text.secondary',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1 
-                }}
-              >
-                <WorkIcon sx={{ fontSize: '0.9rem' }} />
-                {workDay.hours ? `${workDay.hours} hours` : '1 day'} • 
-                <strong>{formatCurrency(workDay.dailyRate, settings.currency)}</strong>
-              </Typography>
-            </Box>
-          </Box>
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
-            <Chip
-              label={isPaid ? 'Paid' : 'Unpaid'}
-              color={isPaid ? 'success' : 'warning'}
-              icon={isPaid ? <PaymentIcon /> : <WorkIcon />}
-              sx={{ 
-                minWidth: 100,
-                fontWeight: 600,
-                boxShadow: 1,
-                '& .MuiChip-icon': {
-                  fontSize: '1.1rem'
-                }
-              }}
-            />
-            {!isMobile && (
-              <Typography 
-                variant="caption" 
-                sx={{ 
-                  color: 'text.secondary',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5 
-                }}
-              >
-                <CalendarIcon sx={{ fontSize: '0.9rem' }} />
-                {format(new Date(workDay.date), 'MMM d, yyyy')}
-              </Typography>
-            )}
-          </Box>
-        </Box>
-
-        {isPaid && (
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 1.5, 
-            mb: 2,
-            p: 1.5,
-            bgcolor: 'success.light',
-            borderRadius: '12px',
-            color: 'success.dark',
-            boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.06)'
-          }}>
-            <PaymentIcon fontSize="small" />
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              Paid on {format(new Date(workDay.paidDate), 'MMMM d, yyyy')}
-              {workDay.paymentMethod && ` via ${workDay.paymentMethod}`}
-            </Typography>
-          </Box>
-        )}
-
-        {workDay.notes && (
-          <Box sx={{ 
-            mb: 2,
-            p: 1.5,
-            bgcolor: 'background.paper',
-            borderRadius: '12px',
-            border: '1px solid',
-            borderColor: 'divider',
-            boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.03)'
-          }}>
-            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-              {workDay.notes}
-            </Typography>
-          </Box>
-        )}
-
-        <Box sx={{ 
-          display: 'flex', 
-          gap: 1.5, 
-          justifyContent: 'flex-end',
-          borderTop: '1px solid',
-          borderColor: isPaid ? 'success.light' : 'warning.light',
-          pt: 2,
-          mt: 2
-        }}>
-          {!isPaid ? (
-            <Button
-              size="medium"
-              startIcon={<PaymentIcon />}
-              onClick={() => handleMarkAsPaid(workDay)}
-              color="success"
-              variant="contained"
-              sx={{ 
-                fontWeight: 600,
-                borderRadius: '8px',
-                textTransform: 'none',
-                boxShadow: 2,
-                '&:hover': {
-                  boxShadow: 4
-                }
-              }}
-            >
-              Mark as Paid
-            </Button>
-          ) : (
-            <Button
-              size="medium"
-              startIcon={<WorkIcon />}
-              onClick={() => handleUnmarkAsPaid(workDay)}
-              color="warning"
-              variant="outlined"
-              sx={{ 
-                fontWeight: 600,
-                borderRadius: '8px',
-                textTransform: 'none'
-              }}
-            >
-              Unmark as Paid
-            </Button>
-          )}
-          <IconButton
-            size="medium"
-            onClick={() => handleEditWorkDay(workDay)}
-            sx={{ 
-              color: 'primary.main',
-              bgcolor: 'background.paper',
-              boxShadow: 1,
-              '&:hover': {
-                bgcolor: 'primary.lighter'
-              }
-            }}
-          >
-            <EditIcon />
-          </IconButton>
-          <IconButton
-            size="medium"
-            onClick={() => handleDeleteWorkDay(workDay)}
-            sx={{ 
-              color: 'error.main',
-              bgcolor: 'background.paper',
-              boxShadow: 1,
-              '&:hover': {
-                bgcolor: 'error.lighter'
-              }
-            }}
-          >
-            <DeleteIcon />
-          </IconButton>
-        </Box>
-      </Paper>
-    );
+  const monthStats = {
+    workDaysCount: workDays.filter(wd => {
+      const workDayDate = new Date(wd.date);
+      return workDayDate.getMonth() === currentDate.getMonth() && 
+             workDayDate.getFullYear() === currentDate.getFullYear();
+    }).length,
+    totalOwed: workDays.filter(wd => {
+      const workDayDate = new Date(wd.date);
+      return workDayDate.getMonth() === currentDate.getMonth() && 
+             workDayDate.getFullYear() === currentDate.getFullYear();
+    }).reduce((sum, wd) => sum + wd.dailyRate, 0),
+    totalPayments: payments.filter(p => {
+      const paymentDate = new Date(p.date);
+      return paymentDate.getMonth() === currentDate.getMonth() && 
+             paymentDate.getFullYear() === currentDate.getFullYear();
+    }).reduce((sum, p) => sum + p.amount, 0),
   };
 
   return (
@@ -528,34 +224,24 @@ const Calendar = () => {
         sx={{ 
           p: { xs: 2, sm: 3 },
           mb: { xs: 2, sm: 3 },
-          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+          background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
           borderRadius: 2,
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-          <Box>
-            <Typography 
-              variant="h4" 
-              component="h1" 
-              sx={{ 
-                fontWeight: 700,
-                fontSize: { xs: '1.5rem', sm: '2rem' },
-                mb: { xs: 0.5, sm: 1 },
-              }}
-            >
-              Work Calendar
-            </Typography>
-            <Typography 
-              variant="body1" 
-              color="text.secondary"
-              sx={{ 
-                fontSize: { xs: '0.875rem', sm: '1rem' },
-              }}
-            >
-              Track work days and payments
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            sx={{ 
+              fontWeight: 700,
+              fontSize: { xs: '1.5rem', sm: '2rem' },
+              color: 'primary.main',
+            }}
+          >
+            <EventIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+            Calendar
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             <IconButton
               onClick={() => setCurrentDate(subMonths(currentDate, 1))}
               sx={{ 
@@ -569,12 +255,13 @@ const Calendar = () => {
             <Button
               variant="outlined"
               onClick={() => setCurrentDate(new Date())}
+              startIcon={<TodayIcon />}
               sx={{
                 minWidth: { xs: 'auto', sm: '120px' },
                 px: { xs: 1, sm: 2 },
               }}
             >
-              Today
+              {isSmallMobile ? '' : 'Today'}
             </Button>
             <IconButton
               onClick={() => setCurrentDate(addMonths(currentDate, 1))}
@@ -588,6 +275,31 @@ const Calendar = () => {
             </IconButton>
           </Box>
         </Box>
+
+        {/* Month Stats */}
+        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+          <Chip 
+            icon={<WorkIcon />} 
+            label={`${monthStats.workDaysCount} Work Days`} 
+            color="primary" 
+            variant="outlined"
+            size={isSmallMobile ? "small" : "medium"}
+          />
+          <Chip 
+            icon={<PaymentIcon />} 
+            label={`${formatCurrency(monthStats.totalOwed, settings.currency)} Owed`} 
+            color="warning" 
+            variant="outlined"
+            size={isSmallMobile ? "small" : "medium"}
+          />
+          <Chip 
+            icon={<PaymentIcon />} 
+            label={`${formatCurrency(monthStats.totalPayments, settings.currency)} Paid`} 
+            color="success" 
+            variant="outlined"
+            size={isSmallMobile ? "small" : "medium"}
+          />
+        </Stack>
       </Paper>
 
       {/* Calendar Grid */}
@@ -595,362 +307,395 @@ const Calendar = () => {
         sx={{ 
           p: { xs: 1, sm: 2 },
           mb: { xs: 2, sm: 3 },
-          overflowX: 'hidden',
+          borderRadius: 2,
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <Box sx={{ mb: 2 }}>
-          <Typography 
-            variant="h5" 
-            sx={{ 
-              textAlign: 'center',
-              fontWeight: 600,
-              fontSize: { xs: '1.25rem', sm: '1.5rem' },
-            }}
-          >
-            {format(currentDate, 'MMMM yyyy')}
-          </Typography>
-        </Box>
+        <Typography 
+          variant="h5" 
+          sx={{ 
+            textAlign: 'center',
+            fontWeight: 600,
+            fontSize: { xs: '1.25rem', sm: '1.5rem' },
+            mb: 2,
+            color: 'text.primary',
+          }}
+        >
+          {format(currentDate, 'MMMM yyyy')}
+        </Typography>
 
-        <Grid container spacing={1}>
+        <Grid container spacing={0.5}>
           {/* Weekday Headers */}
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
             <Grid item xs={12/7} key={day}>
-              <Typography 
-                align="center" 
-                sx={{ 
-                  fontWeight: 600,
-                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                  color: 'text.secondary',
-                }}
-              >
-                {isSmallMobile ? day.charAt(0) : day}
-              </Typography>
+              <Box sx={{ p: 1, textAlign: 'center' }}>
+                <Typography 
+                  variant="caption"
+                  sx={{ 
+                    fontWeight: 600,
+                    fontSize: { xs: '0.7rem', sm: '0.875rem' },
+                    color: 'text.secondary',
+                  }}
+                >
+                  {isSmallMobile ? day.charAt(0) : day}
+                </Typography>
+              </Box>
             </Grid>
           ))}
 
           {/* Calendar Days */}
-          {getDaysInMonth().map((date, index) => {
+          {getDaysInMonth().map((date) => {
             const dateStr = format(date, 'yyyy-MM-dd');
             const isToday = isSameDay(date, new Date());
             const isSelected = selectedDate && isSameDay(date, selectedDate);
-            const { workDays, payments } = getEventsForDate(date);
-            const hasEvents = workDays.length > 0 || payments.length > 0;
+            const isCurrentMonth = date.getMonth() === currentDate.getMonth();
+            const { workDays: dayWorkDays, payments: dayPayments } = getEventsForDate(date);
+            const hasEvents = dayWorkDays.length > 0 || dayPayments.length > 0;
 
             return (
               <Grid item xs={12/7} key={dateStr}>
-                <Paper
-                  elevation={isSelected ? 8 : hasEvents ? 2 : 0}
+                <Card
+                  elevation={isSelected ? 4 : hasEvents ? 2 : 0}
                   onClick={() => handleDateClick(date)}
                   sx={{
-                    p: { xs: 0.5, sm: 1 },
-                    height: { xs: 60, sm: 80 },
+                    height: { xs: 70, sm: 90 },
                     cursor: 'pointer',
                     position: 'relative',
-                    borderRadius: 1,
                     border: 1,
-                    borderColor: isToday ? 'primary.main' : 'transparent',
-                    bgcolor: isSelected ? 'primary.light' : 'background.paper',
+                    borderColor: isToday ? 'primary.main' : isSelected ? 'primary.light' : 'divider',
+                    bgcolor: isSelected ? 'primary.light' : 
+                             !isCurrentMonth ? 'grey.50' : 
+                             'background.paper',
+                    opacity: isCurrentMonth ? 1 : 0.6,
                     transition: 'all 0.2s ease',
                     '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: 3,
+                      transform: 'translateY(-1px)',
+                      boxShadow: 2,
                     },
                   }}
                 >
-                  <Typography 
-                    align="center"
-                    sx={{ 
-                      fontWeight: isToday ? 700 : 400,
-                      color: isSelected ? 'primary.contrastText' : 'text.primary',
-                      fontSize: { xs: '0.875rem', sm: '1rem' },
-                    }}
-                  >
-                    {format(date, 'd')}
-                  </Typography>
-                  
-                  {/* Event Indicators */}
-                  {hasEvents && (
-                    <Box 
+                  <CardContent sx={{ p: { xs: 0.5, sm: 1 }, '&:last-child': { pb: { xs: 0.5, sm: 1 } } }}>
+                    <Typography 
+                      variant="body2"
                       sx={{ 
-                        position: 'absolute',
-                        bottom: { xs: 2, sm: 4 },
-                        left: 0,
-                        right: 0,
-                        display: 'flex',
-                        justifyContent: 'center',
-                        gap: 0.5,
+                        fontWeight: isToday ? 700 : 500,
+                        color: isSelected ? 'primary.contrastText' : 
+                               isToday ? 'primary.main' : 
+                               'text.primary',
+                        fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                        textAlign: 'center',
+                        mb: 0.5,
                       }}
                     >
-                      {workDays.map((workDay) => (
-                        <Box
-                          key={workDay.id}
-                          sx={{
-                            width: { xs: 4, sm: 6 },
-                            height: { xs: 4, sm: 6 },
-                            borderRadius: '50%',
-                            bgcolor: workDay.isPaid ? 'success.main' : 'warning.main',
-                          }}
-                        />
-                      ))}
-                      {payments.map((payment) => (
-                        <Box
-                          key={payment.id}
-                          sx={{
-                            width: { xs: 4, sm: 6 },
-                            height: { xs: 4, sm: 6 },
-                            borderRadius: '50%',
-                            bgcolor: 'primary.main',
-                          }}
-                        />
-                      ))}
-                    </Box>
-                  )}
-                </Paper>
+                      {format(date, 'd')}
+                    </Typography>
+                    
+                    {/* Event Indicators */}
+                    {hasEvents && (
+                      <Box 
+                        sx={{ 
+                          position: 'absolute',
+                          bottom: 4,
+                          left: 4,
+                          right: 4,
+                          display: 'flex',
+                          justifyContent: 'center',
+                          gap: 0.25,
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        {dayWorkDays.slice(0, 3).map((workDay, idx) => (
+                          <Box
+                            key={`wd-${idx}`}
+                            sx={{
+                              width: { xs: 4, sm: 6 },
+                              height: { xs: 4, sm: 6 },
+                              borderRadius: '50%',
+                              bgcolor: workDay.isPaid ? 'success.main' : 'warning.main',
+                            }}
+                          />
+                        ))}
+                        {dayPayments.slice(0, 2).map((payment, idx) => (
+                          <Box
+                            key={`p-${idx}`}
+                            sx={{
+                              width: { xs: 4, sm: 6 },
+                              height: { xs: 4, sm: 6 },
+                              borderRadius: '50%',
+                              bgcolor: 'info.main',
+                            }}
+                          />
+                        ))}
+                        {(dayWorkDays.length + dayPayments.length) > 5 && (
+                          <Typography variant="caption" sx={{ fontSize: '0.6rem', color: 'text.secondary' }}>
+                            +{(dayWorkDays.length + dayPayments.length) - 5}
+                          </Typography>
+                        )}
+                      </Box>
+                    )}
+                  </CardContent>
+                </Card>
               </Grid>
             );
           })}
         </Grid>
       </Paper>
 
-      {/* Event List for Selected Date */}
+      {/* Selected Date Details */}
       {selectedDate && (
-        <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+        <Paper sx={{ p: { xs: 2, sm: 3 }, borderRadius: 2 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              {format(selectedDate, 'MMMM d, yyyy')}
+            <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
+              {format(selectedDate, 'EEEE, MMMM d, yyyy')}
             </Typography>
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Button
                 variant="contained"
+                size="small"
                 startIcon={<WorkIcon />}
-                onClick={() => setOpenWorkDayDialog(true)}
-                size={isSmallMobile ? "small" : "medium"}
+                onClick={handleAddWorkDay}
+                sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
               >
-                Add Work Day
+                Work Day
               </Button>
               <Button
                 variant="contained"
+                size="small"
                 startIcon={<PaymentIcon />}
-                onClick={() => setOpenPaymentDialog(true)}
-                size={isSmallMobile ? "small" : "medium"}
+                onClick={handleAddPayment}
+                color="success"
+                sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
               >
-                Add Payment
+                Payment
               </Button>
             </Box>
           </Box>
 
-          {/* Work Days */}
-          {workDays.length > 0 && (
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
-                Work Days
-              </Typography>
-              <Stack spacing={1}>
-                {workDays.map((workDay) => (
-                  <WorkDayCard
-                    key={workDay.id}
-                    workDay={workDay}
-                    employee={getEmployeeById(workDay.employeeId)}
-                    onEdit={() => handleEditWorkDay(workDay)}
-                    onDelete={() => handleDeleteWorkDay(workDay)}
-                    onTogglePaid={() => handleToggleWorkDayPaid(workDay)}
-                  />
-                ))}
-              </Stack>
-            </Box>
-          )}
+          {(() => {
+            const { workDays: dayWorkDays, payments: dayPayments } = getEventsForDate(selectedDate);
+            
+            if (dayWorkDays.length === 0 && dayPayments.length === 0) {
+              return (
+                <Box sx={{ textAlign: 'center', py: 3, color: 'text.secondary' }}>
+                  <EventIcon sx={{ fontSize: 48, mb: 1, opacity: 0.5 }} />
+                  <Typography variant="body1">No events for this date</Typography>
+                  <Typography variant="body2">Tap the buttons above to add work days or payments</Typography>
+                </Box>
+              );
+            }
 
-          {/* Payments */}
-          {payments.length > 0 && (
-            <Box>
-              <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
-                Payments
-              </Typography>
-              <Stack spacing={1}>
-                {payments.map((payment) => (
-                  <PaymentCard
-                    key={payment.id}
-                    payment={payment}
-                    employee={getEmployeeById(payment.employeeId)}
-                    onEdit={() => handleEditPayment(payment)}
-                    onDelete={() => handleDeletePayment(payment)}
-                  />
-                ))}
-              </Stack>
-            </Box>
-          )}
+            return (
+              <Stack spacing={2}>
+                {dayWorkDays.length > 0 && (
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+                      Work Days ({dayWorkDays.length})
+                    </Typography>
+                    <Stack spacing={1}>
+                      {dayWorkDays.map((workDay) => {
+                        const employee = getEmployeeById(workDay.employeeId);
+                        return (
+                          <Card key={workDay.id} elevation={1}>
+                            <CardContent sx={{ p: 2 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <Avatar sx={{ bgcolor: workDay.isPaid ? 'success.main' : 'warning.main' }}>
+                                  {getInitials(employee?.name || '')}
+                                </Avatar>
+                                <Box sx={{ flex: 1 }}>
+                                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                    {employee?.name}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    {formatCurrency(workDay.dailyRate, settings.currency)}
+                                  </Typography>
+                                </Box>
+                                <Chip
+                                  label={workDay.isPaid ? 'Paid' : 'Unpaid'}
+                                  color={workDay.isPaid ? 'success' : 'warning'}
+                                  size="small"
+                                />
+                              </Box>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </Stack>
+                  </Box>
+                )}
 
-          {workDays.length === 0 && payments.length === 0 && (
-            <Box 
-              sx={{ 
-                textAlign: 'center',
-                py: 4,
-                color: 'text.secondary',
-              }}
-            >
-              <Typography variant="body1">
-                No events for this date
-              </Typography>
-            </Box>
-          )}
+                {dayPayments.length > 0 && (
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+                      Payments ({dayPayments.length})
+                    </Typography>
+                    <Stack spacing={1}>
+                      {dayPayments.map((payment) => {
+                        const employee = getEmployeeById(payment.employeeId);
+                        return (
+                          <Card key={payment.id} elevation={1}>
+                            <CardContent sx={{ p: 2 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <Avatar sx={{ bgcolor: 'success.main' }}>
+                                  {getInitials(employee?.name || '')}
+                                </Avatar>
+                                <Box sx={{ flex: 1 }}>
+                                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                    {employee?.name}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    {payment.paymentMethod}
+                                  </Typography>
+                                </Box>
+                                <Typography variant="h6" color="success.main" sx={{ fontWeight: 600 }}>
+                                  {formatCurrency(payment.amount, settings.currency)}
+                                </Typography>
+                              </Box>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </Stack>
+                  </Box>
+                )}
+              </Stack>
+            );
+          })()}
         </Paper>
       )}
 
-      {/* Dialogs */}
+      {/* Floating Action Buttons */}
+      {isMobile && (
+        <Box sx={{ position: 'fixed', bottom: 80, right: 16, display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Fab
+            color="primary"
+            onClick={handleAddWorkDay}
+            sx={{ bgcolor: 'warning.main', '&:hover': { bgcolor: 'warning.dark' } }}
+          >
+            <WorkIcon />
+          </Fab>
+          <Fab
+            color="success"
+            onClick={handleAddPayment}
+          >
+            <PaymentIcon />
+          </Fab>
+        </Box>
+      )}
+
+      {/* Work Day Dialog */}
       <Dialog open={openWorkDayDialog} onClose={() => setOpenWorkDayDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ pb: 1 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            {editingWorkDay ? 'Edit Work Day' : 'Add Work Day'}
-          </Typography>
-        </DialogTitle>
+        <DialogTitle>Add Work Day</DialogTitle>
         <DialogContent>
-          <Box sx={{ pt: 1 }}>
-            <FormControl fullWidth margin="normal" required>
-              <InputLabel>Employee</InputLabel>
-              <Select
-                value={workDayForm.employeeId}
-                onChange={(e) => {
-                  const selectedEmployee = employees.find(emp => emp.id === e.target.value);
-                  setWorkDayForm({ 
-                    ...workDayForm, 
-                    employeeId: e.target.value,
-                    dailyRate: selectedEmployee?.dailyRate?.toString() || ''
-                  });
-                }}
-                label="Employee"
-              >
-                {employees.map((employee) => (
-                  <MenuItem key={employee.id} value={employee.id}>
-                    {employee.name} - {formatCurrency(employee.dailyRate, settings.currency)}/day
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+          <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
+              select
+              label="Employee"
+              value={workDayForm.employeeId}
+              onChange={(e) => setWorkDayForm(prev => ({ ...prev, employeeId: e.target.value }))}
               fullWidth
-              label="Date"
-              type="date"
-              value={workDayForm.date}
-              onChange={(e) => setWorkDayForm({ ...workDayForm, date: e.target.value })}
-              margin="normal"
               required
+            >
+              {employees.map((employee) => (
+                <MenuItem key={employee.id} value={employee.id}>
+                  {employee.name}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              type="date"
+              label="Date"
+              value={workDayForm.date}
+              onChange={(e) => setWorkDayForm(prev => ({ ...prev, date: e.target.value }))}
+              fullWidth
               InputLabelProps={{ shrink: true }}
             />
             <TextField
-              fullWidth
-              label="Daily Rate"
               type="number"
+              label="Daily Rate"
               value={workDayForm.dailyRate}
-              onChange={(e) => setWorkDayForm({ ...workDayForm, dailyRate: e.target.value })}
-              margin="normal"
-              required
-              inputProps={{ min: 0, step: 0.5 }}
+              onChange={(e) => setWorkDayForm(prev => ({ ...prev, dailyRate: e.target.value }))}
+              fullWidth
+              placeholder="Leave empty to use employee's default rate"
             />
             <TextField
-              fullWidth
-              label="Notes (optional)"
+              label="Notes"
               value={workDayForm.notes}
-              onChange={(e) => setWorkDayForm({ ...workDayForm, notes: e.target.value })}
-              margin="normal"
+              onChange={(e) => setWorkDayForm(prev => ({ ...prev, notes: e.target.value }))}
+              fullWidth
               multiline
-              rows={3}
+              rows={2}
             />
-          </Box>
+          </Stack>
         </DialogContent>
-        <DialogActions sx={{ p: 3, pt: 1 }}>
-          <Button onClick={() => setOpenWorkDayDialog(false)} variant="outlined">
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleWorkDaySubmit} 
-            variant="contained"
-            sx={{
-              background: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #f57c00 0%, #ef6c00 100%)',
-              },
-            }}
-          >
-            {editingWorkDay ? 'Update' : 'Add'}
-          </Button>
+        <DialogActions>
+          <Button onClick={() => setOpenWorkDayDialog(false)}>Cancel</Button>
+          <Button onClick={handleSubmitWorkDay} variant="contained">Add Work Day</Button>
         </DialogActions>
       </Dialog>
 
+      {/* Payment Dialog */}
       <Dialog open={openPaymentDialog} onClose={() => setOpenPaymentDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ pb: 1 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            {editingPayment ? 'Edit Payment' : 'Add Payment'}
-          </Typography>
-        </DialogTitle>
+        <DialogTitle>Add Payment</DialogTitle>
         <DialogContent>
-          <Box sx={{ pt: 1 }}>
-            <FormControl fullWidth margin="normal" required>
-              <InputLabel>Employee</InputLabel>
-              <Select
-                value={paymentForm.employeeId}
-                onChange={(e) => setPaymentForm({ ...paymentForm, employeeId: e.target.value })}
-                label="Employee"
-              >
-                {employees.map((employee) => (
-                  <MenuItem key={employee.id} value={employee.id}>
-                    {employee.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+          <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
+              select
+              label="Employee"
+              value={paymentForm.employeeId}
+              onChange={(e) => setPaymentForm(prev => ({ ...prev, employeeId: e.target.value }))}
               fullWidth
-              label="Date"
-              type="date"
-              value={paymentForm.date}
-              onChange={(e) => setPaymentForm({ ...paymentForm, date: e.target.value })}
-              margin="normal"
               required
+            >
+              {employees.map((employee) => (
+                <MenuItem key={employee.id} value={employee.id}>
+                  {employee.name}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              type="date"
+              label="Date"
+              value={paymentForm.date}
+              onChange={(e) => setPaymentForm(prev => ({ ...prev, date: e.target.value }))}
+              fullWidth
               InputLabelProps={{ shrink: true }}
             />
             <TextField
-              fullWidth
-              label="Amount"
               type="number"
+              label="Amount"
               value={paymentForm.amount}
-              onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
-              margin="normal"
+              onChange={(e) => setPaymentForm(prev => ({ ...prev, amount: e.target.value }))}
+              fullWidth
               required
-              inputProps={{ min: 0, step: 0.01 }}
-              InputProps={{
-                startAdornment: <Typography variant="body2" sx={{ mr: 1 }}>{getCurrencySymbol(settings.currency)}</Typography>,
-              }}
             />
             <TextField
+              select
+              label="Payment Method"
+              value={paymentForm.paymentMethod}
+              onChange={(e) => setPaymentForm(prev => ({ ...prev, paymentMethod: e.target.value }))}
               fullWidth
-              label="Notes (optional)"
+            >
+              <MenuItem value="Cash">Cash</MenuItem>
+              <MenuItem value="Check">Check</MenuItem>
+              <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
+              <MenuItem value="PayPal">PayPal</MenuItem>
+              <MenuItem value="Other">Other</MenuItem>
+            </TextField>
+            <TextField
+              label="Notes"
               value={paymentForm.notes}
-              onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
-              margin="normal"
+              onChange={(e) => setPaymentForm(prev => ({ ...prev, notes: e.target.value }))}
+              fullWidth
               multiline
-              rows={3}
+              rows={2}
             />
-          </Box>
+          </Stack>
         </DialogContent>
-        <DialogActions sx={{ p: 3, pt: 1 }}>
-          <Button onClick={() => setOpenPaymentDialog(false)} variant="outlined">
-            Cancel
-          </Button>
-          <Button 
-            onClick={handlePaymentSubmit} 
-            variant="contained"
-            sx={{
-              background: 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #388e3c 0%, #2e7d32 100%)',
-              },
-            }}
-          >
-            {editingPayment ? 'Update' : 'Add'}
-          </Button>
+        <DialogActions>
+          <Button onClick={() => setOpenPaymentDialog(false)}>Cancel</Button>
+          <Button onClick={handleSubmitPayment} variant="contained" color="success">Add Payment</Button>
         </DialogActions>
       </Dialog>
     </Box>
