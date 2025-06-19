@@ -42,6 +42,7 @@ import {
   Zoom,
   Collapse,
   useScrollTrigger,
+  Container,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -117,7 +118,7 @@ const EmployeeCard = ({
               top: 0,
               left: 0,
               right: 0,
-              height: 4,
+              height: 3,
               bgcolor: 'warning.main',
               zIndex: 1,
             }}
@@ -129,8 +130,8 @@ const EmployeeCard = ({
           variant="determinate" 
           value={Math.min(progress, 100)} 
           sx={{ 
-            height: 4,
-            backgroundColor: 'rgba(0,0,0,0.1)',
+            height: 3,
+            backgroundColor: 'rgba(0,0,0,0.08)',
             '& .MuiLinearProgress-bar': {
               background: progress >= 100 ? 
                 'linear-gradient(90deg, #4caf50, #66bb6a)' : 
@@ -139,9 +140,9 @@ const EmployeeCard = ({
           }} 
         />
         
-        <CardContent sx={{ p: isMobile ? 2 : 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+        <CardContent sx={{ p: isMobile ? 2.5 : 3, pb: isMobile ? 2.5 : 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
               <Avatar 
                 sx={{ 
                   mr: 2,
@@ -155,6 +156,7 @@ const EmployeeCard = ({
                   fontSize: isMobile ? '1rem' : '1.25rem',
                   fontWeight: 600,
                   boxShadow: 2,
+                  flexShrink: 0,
                 }}
               >
                 {employee.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '??'}
@@ -170,6 +172,7 @@ const EmployeeCard = ({
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
+                    lineHeight: 1.2,
                   }}
                 >
                   {employee.name}
@@ -180,6 +183,7 @@ const EmployeeCard = ({
                   sx={{ 
                     fontSize: isMobile ? '0.8rem' : '0.875rem',
                     fontWeight: 500,
+                    lineHeight: 1.3,
                   }}
                 >
                   {formatCurrency(employee.dailyRate, 'USD')}/day
@@ -197,6 +201,8 @@ const EmployeeCard = ({
                 '&:hover': { bgcolor: 'rgba(0,0,0,0.08)' },
                 width: isMobile ? 32 : 40,
                 height: isMobile ? 32 : 40,
+                flexShrink: 0,
+                ml: 1,
               }}
             >
               <MoreVertIcon fontSize="small" />
@@ -204,14 +210,18 @@ const EmployeeCard = ({
           </Box>
 
           {/* Quick Stats */}
-          <Grid container spacing={1} sx={{ mb: 2 }}>
+          <Grid container spacing={1.5} sx={{ mb: 2.5 }}>
             <Grid item xs={6}>
               <Box sx={{ 
                 textAlign: 'center', 
-                p: isMobile ? 1 : 2, 
+                p: isMobile ? 1.5 : 2, 
                 bgcolor: 'primary.light', 
-                borderRadius: 1,
+                borderRadius: 1.5,
                 boxShadow: 1,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
               }}>
                 <Typography 
                   variant={isMobile ? "body2" : "h6"} 
@@ -219,6 +229,8 @@ const EmployeeCard = ({
                     fontWeight: 600, 
                     color: 'primary.contrastText',
                     fontSize: isMobile ? '0.75rem' : '1rem',
+                    lineHeight: 1.2,
+                    mb: 0.5,
                   }}
                 >
                   {formatCurrency(totals.totalOwed, 'USD')}
@@ -229,6 +241,7 @@ const EmployeeCard = ({
                     color: 'primary.contrastText', 
                     opacity: 0.9,
                     fontSize: isMobile ? '0.65rem' : '0.75rem',
+                    lineHeight: 1.2,
                   }}
                 >
                   Owed
@@ -238,10 +251,14 @@ const EmployeeCard = ({
             <Grid item xs={6}>
               <Box sx={{ 
                 textAlign: 'center', 
-                p: isMobile ? 1 : 2, 
+                p: isMobile ? 1.5 : 2, 
                 bgcolor: 'success.light', 
-                borderRadius: 1,
+                borderRadius: 1.5,
                 boxShadow: 1,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
               }}>
                 <Typography 
                   variant={isMobile ? "body2" : "h6"} 
@@ -249,6 +266,8 @@ const EmployeeCard = ({
                     fontWeight: 600, 
                     color: 'success.contrastText',
                     fontSize: isMobile ? '0.75rem' : '1rem',
+                    lineHeight: 1.2,
+                    mb: 0.5,
                   }}
                 >
                   {formatCurrency(totals.totalPaid, 'USD')}
@@ -259,6 +278,7 @@ const EmployeeCard = ({
                     color: 'success.contrastText', 
                     opacity: 0.9,
                     fontSize: isMobile ? '0.65rem' : '0.75rem',
+                    lineHeight: 1.2,
                   }}
                 >
                   Paid
@@ -276,6 +296,7 @@ const EmployeeCard = ({
               sx={{ 
                 mb: 1,
                 fontSize: isMobile ? '0.75rem' : '0.875rem',
+                fontWeight: 500,
               }}
             >
               {totals.outstanding < 0 ? 'In Credit' : 'Outstanding'}
@@ -289,6 +310,7 @@ const EmployeeCard = ({
                 fontWeight: 600,
                 fontSize: isMobile ? '0.7rem' : '0.875rem',
                 boxShadow: 1,
+                height: isMobile ? 24 : 28,
               }}
             />
           </Box>
@@ -330,10 +352,12 @@ const EmployeeListItem = ({
             transform: 'translateX(0px)',
           },
           transition: 'all 0.2s ease',
+          px: 2,
+          py: 1.5,
         }}
         onClick={() => onViewDetails(employee)}
       >
-        <ListItemAvatar>
+        <ListItemAvatar sx={{ minWidth: 56 }}>
           <Avatar 
             sx={{ 
               background: isOutstanding 
@@ -352,28 +376,29 @@ const EmployeeListItem = ({
         </ListItemAvatar>
         <ListItemText
           primary={
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: '1rem' }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: '1rem', mb: 0.5 }}>
               {employee.name}
             </Typography>
           }
           secondary={
             <Box>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontSize: '0.875rem' }}>
                 {formatCurrency(employee.dailyRate, 'USD')}/day
               </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                 <Chip
                   label={formatCurrency(Math.abs(totals.outstanding), 'USD')}
                   color={totals.outstanding > 0 ? 'warning' : totals.outstanding < 0 ? 'info' : 'success'}
                   size="small"
                   sx={{ fontSize: '0.7rem', height: 20 }}
                 />
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                   {totals.outstanding < 0 ? 'In Credit' : 'Outstanding'}
                 </Typography>
               </Box>
             </Box>
           }
+          sx={{ mr: 1 }}
         />
         <ListItemSecondaryAction>
           <IconButton
@@ -385,6 +410,8 @@ const EmployeeListItem = ({
             sx={{ 
               bgcolor: 'rgba(0,0,0,0.04)',
               '&:hover': { bgcolor: 'rgba(0,0,0,0.08)' },
+              width: 36,
+              height: 36,
             }}
           >
             <MoreVertIcon fontSize="small" />
@@ -401,7 +428,6 @@ const StatsSummary = ({ stats, isExpanded, onToggle, isMobile }) => {
     <Paper
       elevation={isMobile ? 0 : 1}
       sx={{
-        mb: 2,
         borderRadius: isMobile ? 0 : 2,
         border: isMobile ? 'none' : '1px solid',
         borderColor: 'divider',
@@ -422,9 +448,9 @@ const StatsSummary = ({ stats, isExpanded, onToggle, isMobile }) => {
           },
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <GroupIcon color="primary" />
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, fontSize: isMobile ? '1.1rem' : '1.25rem' }}>
             Team Summary
           </Typography>
         </Box>
@@ -436,40 +462,40 @@ const StatsSummary = ({ stats, isExpanded, onToggle, isMobile }) => {
           <Grid container spacing={isMobile ? 2 : 3}>
             <Grid item xs={6} sm={3}>
               <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h4" color="primary" sx={{ fontWeight: 700 }}>
+                <Typography variant="h4" color="primary" sx={{ fontWeight: 700, fontSize: isMobile ? '1.75rem' : '2.125rem' }}>
                   {stats.totalEmployees}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}>
                   Employees
                 </Typography>
               </Box>
             </Grid>
             <Grid item xs={6} sm={3}>
               <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h4" color="warning.main" sx={{ fontWeight: 700 }}>
+                <Typography variant="h4" color="warning.main" sx={{ fontWeight: 700, fontSize: isMobile ? '1.75rem' : '2.125rem' }}>
                   {stats.needingAttention}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}>
                   Need Attention
                 </Typography>
               </Box>
             </Grid>
             <Grid item xs={6} sm={3}>
               <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h4" color="error.main" sx={{ fontWeight: 700 }}>
+                <Typography variant="h4" color="error.main" sx={{ fontWeight: 700, fontSize: isMobile ? '1.75rem' : '2.125rem' }}>
                   {formatCurrency(stats.totalOwed, 'USD')}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}>
                   Total Owed
                 </Typography>
               </Box>
             </Grid>
             <Grid item xs={6} sm={3}>
               <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h4" color="success.main" sx={{ fontWeight: 700 }}>
+                <Typography variant="h4" color="success.main" sx={{ fontWeight: 700, fontSize: isMobile ? '1.75rem' : '2.125rem' }}>
                   {formatCurrency(stats.totalPaid, 'USD')}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}>
                   Total Paid
                 </Typography>
               </Box>
@@ -654,7 +680,7 @@ const Employees = () => {
 
   if (loading && !isInitialized) {
     return (
-      <Box sx={{ p: isMobile ? 1 : 2 }}>
+      <Container maxWidth="xl" sx={{ py: isMobile ? 1 : 2 }}>
         <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2, mb: 4 }} />
         <Grid container spacing={2}>
           {[1, 2, 3, 4].map((item) => (
@@ -663,7 +689,7 @@ const Employees = () => {
             </Grid>
           ))}
         </Grid>
-      </Box>
+      </Container>
     );
   }
 
@@ -685,15 +711,15 @@ const Employees = () => {
         <Box 
           sx={{ 
             px: isMobile ? 2 : 3,
-            py: isMobile ? 1.5 : 2,
+            py: isMobile ? 2 : 2.5,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             bgcolor: 'background.paper',
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <PersonIcon color="primary" />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <PersonIcon color="primary" sx={{ fontSize: isMobile ? '1.5rem' : '2rem' }} />
             <Typography 
               variant="h5" 
               component="h1" 
@@ -717,6 +743,8 @@ const Employees = () => {
                 color: 'text.secondary',
                 '&:hover': { color: 'primary.main' },
                 '&:active': { transform: 'scale(0.95)' },
+                width: 40,
+                height: 40,
               }}
             >
               <FilterListIcon />
@@ -727,6 +755,8 @@ const Employees = () => {
                 color: 'text.secondary',
                 '&:hover': { color: 'primary.main' },
                 '&:active': { transform: 'scale(0.95)' },
+                width: 40,
+                height: 40,
               }}
             >
               <RefreshIcon />
@@ -803,10 +833,10 @@ const Employees = () => {
       )}
 
       {/* Employees List/Grid */}
-      <Box sx={{ px: isMobile ? 1 : 2 }}>
+      <Container maxWidth="xl" sx={{ px: isMobile ? 1 : 2, pb: isMobile ? 8 : 4 }}>
         {filteredAndSortedEmployees.length === 0 ? (
           <Fade in timeout={900}>
-            <Paper sx={{ p: 6, textAlign: 'center', borderRadius: 2 }}>
+            <Paper sx={{ p: 6, textAlign: 'center', borderRadius: 2, mt: 2 }}>
               <PersonIcon sx={{ fontSize: 80, color: 'text.secondary', mb: 3 }} />
               <Typography variant="h5" color="text.secondary" gutterBottom sx={{ fontWeight: 600 }}>
                 {filterStatus !== 'all' ? 'No employees match your filter' : 'No employees yet'}
@@ -830,7 +860,7 @@ const Employees = () => {
           </Fade>
         ) : isMobile ? (
           // Mobile list view
-          <List sx={{ p: 0 }}>
+          <List sx={{ p: 0, mt: 1 }}>
             {filteredAndSortedEmployees.map((employee, index) => {
               const totals = calculateEmployeeTotals(employee.id);
               return (
@@ -848,7 +878,7 @@ const Employees = () => {
           </List>
         ) : (
           // Desktop grid view
-          <Grid container spacing={3}>
+          <Grid container spacing={3} sx={{ mt: 1 }}>
             {filteredAndSortedEmployees.map((employee, index) => {
               const totals = calculateEmployeeTotals(employee.id);
               return (
@@ -867,9 +897,9 @@ const Employees = () => {
             })}
           </Grid>
         )}
-      </Box>
+      </Container>
 
-      {/* Floating Action Button - Mobile Only */}
+      {/* Floating Action Button */}
       <Zoom in={true}>
         <Box
           sx={{
