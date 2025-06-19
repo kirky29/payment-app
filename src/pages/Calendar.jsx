@@ -39,6 +39,7 @@ import {
   ExpandLess as ExpandLessIcon,
   SwipeLeft as SwipeLeftIcon,
   SwipeRight as SwipeRightIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { useApp } from '../contexts/AppContext';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
@@ -272,7 +273,23 @@ const Calendar = () => {
           borderColor: 'divider',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <IconButton
+          onClick={() => setCurrentDate(subMonths(currentDate, 1))}
+          sx={{ 
+            color: 'text.secondary',
+            '&:hover': { color: 'primary.main' }
+          }}
+        >
+          <ChevronLeftIcon />
+        </IconButton>
+
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'baseline',
+          gap: 1,
+          flex: 1,
+          justifyContent: 'center'
+        }}>
           <Typography 
             variant="h4" 
             component="h1" 
@@ -280,7 +297,6 @@ const Calendar = () => {
               fontWeight: 500,
               fontSize: { xs: '2rem', sm: '2.4rem' },
               color: 'text.primary',
-              mr: 1,
             }}
           >
             {format(currentDate, 'MMMM')}
@@ -296,21 +312,16 @@ const Calendar = () => {
             {format(currentDate, 'yyyy')}
           </Typography>
         </Box>
-        {!isMobile && (
-          <Button
-            variant="text"
-            onClick={() => setCurrentDate(new Date())}
-            sx={{
-              color: 'primary.main',
-              '&:hover': {
-                backgroundColor: 'transparent',
-                textDecoration: 'underline',
-              },
-            }}
-          >
-            Today
-          </Button>
-        )}
+
+        <IconButton
+          onClick={() => setCurrentDate(addMonths(currentDate, 1))}
+          sx={{ 
+            color: 'text.secondary',
+            '&:hover': { color: 'primary.main' }
+          }}
+        >
+          <ChevronRightIcon />
+        </IconButton>
       </Box>
 
       {/* Calendar Grid */}
@@ -459,200 +470,187 @@ const Calendar = () => {
         </Grid>
       </Box>
 
-      {/* Action Buttons - Fixed at bottom */}
-      <Box 
-        sx={{ 
-          position: 'fixed',
-          bottom: 16,
-          right: 16,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 1,
-        }}
-      >
-        <Fab
-          color="primary"
-          onClick={handleAddWorkDay}
-          sx={{
-            boxShadow: 3,
-            '&:hover': {
-              boxShadow: 6,
-            },
-          }}
-        >
-          <WorkIcon />
-        </Fab>
-        <Fab
-          color="secondary"
-          onClick={handleAddPayment}
-          sx={{
-            boxShadow: 3,
-            '&:hover': {
-              boxShadow: 6,
-            },
-          }}
-        >
-          <PaymentIcon />
-        </Fab>
-      </Box>
-
       {/* Selected Date Details */}
       {selectedDate && (
-        <Slide direction="up" in timeout={500}>
-          <Paper sx={{ p: { xs: 3, sm: 4 }, borderRadius: 3, mb: 4 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main', fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>
-                {format(selectedDate, 'EEEE, MMMM d, yyyy')}
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button
-                  variant="contained"
-                  size={isMobile ? "medium" : "large"}
-                  startIcon={<WorkIcon />}
-                  onClick={handleAddWorkDay}
-                  sx={{ 
-                    fontSize: { xs: '0.875rem', sm: '1rem' },
-                    px: { xs: 2, sm: 3 },
-                  }}
-                >
-                  {isMobile ? 'Work' : 'Work Day'}
-                </Button>
-                <Button
-                  variant="contained"
-                  size={isMobile ? "medium" : "large"}
-                  startIcon={<PaymentIcon />}
-                  onClick={handleAddPayment}
-                  color="success"
-                  sx={{ 
-                    fontSize: { xs: '0.875rem', sm: '1rem' },
-                    px: { xs: 2, sm: 3 },
-                  }}
-                >
-                  {isMobile ? 'Pay' : 'Payment'}
-                </Button>
-              </Box>
+        <Slide direction="up" in={Boolean(selectedDate)}>
+          <Paper
+            sx={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              maxHeight: '60vh',
+              overflowY: 'auto',
+              borderTopLeftRadius: 16,
+              borderTopRightRadius: 16,
+              boxShadow: 3,
+              zIndex: 1200,
+              bgcolor: 'background.paper',
+            }}
+          >
+            {/* Add close button */}
+            <Box sx={{ 
+              position: 'absolute', 
+              right: 8, 
+              top: 8,
+              zIndex: 1,
+            }}>
+              <IconButton 
+                onClick={() => setSelectedDate(null)}
+                size="small"
+                sx={{
+                  bgcolor: 'action.selected',
+                  '&:hover': { bgcolor: 'action.hover' },
+                }}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
             </Box>
 
-            {(() => {
-              const { workDays: dayWorkDays, payments: dayPayments } = getEventsForDate(selectedDate);
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+              </Typography>
               
-              if (dayWorkDays.length === 0 && dayPayments.length === 0) {
+              {/* Rest of the selected date content */}
+              {(() => {
+                const { workDays: selectedWorkDays, payments: selectedPayments } = getEventsForDate(selectedDate);
+                
+                if (selectedWorkDays.length === 0 && selectedPayments.length === 0) {
+                  return (
+                    <Box sx={{ textAlign: 'center', py: 2 }}>
+                      <Typography color="text.secondary">
+                        No events scheduled
+                      </Typography>
+                      <Box sx={{ mt: 2, display: 'flex', gap: 1, justifyContent: 'center' }}>
+                        <Button
+                          startIcon={<WorkIcon />}
+                          onClick={handleAddWorkDay}
+                          variant="outlined"
+                          size="small"
+                        >
+                          Add Work Day
+                        </Button>
+                        <Button
+                          startIcon={<PaymentIcon />}
+                          onClick={handleAddPayment}
+                          variant="outlined"
+                          size="small"
+                          color="secondary"
+                        >
+                          Add Payment
+                        </Button>
+                      </Box>
+                    </Box>
+                  );
+                }
+
                 return (
-                  <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
-                    <EventIcon sx={{ fontSize: 64, mb: 2, opacity: 0.5 }} />
-                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                      No events for this date
-                    </Typography>
-                    <Typography variant="body1" sx={{ mb: 3, maxWidth: 300, mx: 'auto' }}>
-                      Add work days or payments using the buttons above
-                    </Typography>
-                  </Box>
-                );
-              }
-
-              return (
-                <Stack spacing={3}>
-                  {dayWorkDays.length > 0 && (
-                    <Box>
-                      <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'warning.main' }}>
-                        Work Days ({dayWorkDays.length})
-                      </Typography>
-                      <Stack spacing={2}>
-                        {dayWorkDays.map((workDay) => {
-                          const employee = getEmployeeById(workDay.employeeId);
-                          return (
-                            <Card key={workDay.id} elevation={2} sx={{ borderRadius: 2 }}>
-                              <CardContent sx={{ p: 3 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                  <Avatar 
-                                    sx={{ 
-                                      bgcolor: workDay.isPaid ? 'success.main' : 'warning.main',
-                                      width: 48,
-                                      height: 48,
-                                      fontSize: '1.125rem',
-                                      fontWeight: 600,
-                                    }}
-                                  >
-                                    {getInitials(employee?.name || '')}
-                                  </Avatar>
-                                  <Box sx={{ flex: 1 }}>
-                                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                                      {employee?.name}
-                                    </Typography>
-                                    <Typography variant="body1" color="text.secondary" sx={{ fontWeight: 500 }}>
-                                      {formatCurrency(workDay.dailyRate, settings.currency)}
-                                    </Typography>
-                                  </Box>
-                                  <Chip
-                                    label={workDay.isPaid ? 'Paid' : 'Unpaid'}
-                                    color={workDay.isPaid ? 'success' : 'warning'}
-                                    size="medium"
-                                    sx={{ fontWeight: 600 }}
-                                  />
-                                </Box>
-                                {workDay.notes && (
-                                  <Typography variant="body2" sx={{ mt: 2, fontStyle: 'italic', color: 'text.secondary' }}>
-                                    {workDay.notes}
+                  <>
+                    {selectedWorkDays.length > 0 && (
+                      <Box sx={{ mb: 3 }}>
+                        <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+                          Work Days
+                        </Typography>
+                        <Stack spacing={1}>
+                          {selectedWorkDays.map((workDay, idx) => {
+                            const employee = getEmployeeById(workDay.employeeId);
+                            return (
+                              <Box
+                                key={idx}
+                                sx={{
+                                  p: 1.5,
+                                  borderRadius: 1,
+                                  bgcolor: workDay.isPaid ? 'success.light' : 'warning.light',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                }}
+                              >
+                                <Box>
+                                  <Typography sx={{ fontWeight: 500 }}>
+                                    {employee?.name || 'Unknown Employee'}
                                   </Typography>
-                                )}
-                              </CardContent>
-                            </Card>
-                          );
-                        })}
-                      </Stack>
-                    </Box>
-                  )}
-
-                  {dayPayments.length > 0 && (
-                    <Box>
-                      <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'success.main' }}>
-                        Payments ({dayPayments.length})
-                      </Typography>
-                      <Stack spacing={2}>
-                        {dayPayments.map((payment) => {
-                          const employee = getEmployeeById(payment.employeeId);
-                          return (
-                            <Card key={payment.id} elevation={2} sx={{ borderRadius: 2 }}>
-                              <CardContent sx={{ p: 3 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                  <Avatar 
-                                    sx={{ 
-                                      bgcolor: 'success.main',
-                                      width: 48,
-                                      height: 48,
-                                      fontSize: '1.125rem',
-                                      fontWeight: 600,
-                                    }}
+                                  <Typography variant="body2" color="text.secondary">
+                                    {formatCurrency(workDay.dailyRate, settings.currency)} per day
+                                  </Typography>
+                                </Box>
+                                <Box>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    color={workDay.isPaid ? "success" : "warning"}
+                                    onClick={() => workDay.isPaid ? unmarkWorkDayAsPaid(workDay.id) : markWorkDayAsPaid(workDay.id)}
                                   >
-                                    {getInitials(employee?.name || '')}
-                                  </Avatar>
-                                  <Box sx={{ flex: 1 }}>
-                                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                                      {employee?.name}
-                                    </Typography>
-                                    <Typography variant="body1" color="text.secondary" sx={{ fontWeight: 500 }}>
-                                      {payment.paymentMethod}
-                                    </Typography>
-                                  </Box>
-                                  <Typography variant="h6" color="success.main" sx={{ fontWeight: 700 }}>
+                                    {workDay.isPaid ? 'Paid' : 'Mark Paid'}
+                                  </Button>
+                                </Box>
+                              </Box>
+                            );
+                          })}
+                        </Stack>
+                      </Box>
+                    )}
+
+                    {selectedPayments.length > 0 && (
+                      <Box>
+                        <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+                          Payments
+                        </Typography>
+                        <Stack spacing={1}>
+                          {selectedPayments.map((payment, idx) => {
+                            const employee = getEmployeeById(payment.employeeId);
+                            return (
+                              <Box
+                                key={idx}
+                                sx={{
+                                  p: 1.5,
+                                  borderRadius: 1,
+                                  bgcolor: 'info.light',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                }}
+                              >
+                                <Box>
+                                  <Typography sx={{ fontWeight: 500 }}>
+                                    {employee?.name || 'Unknown Employee'}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
                                     {formatCurrency(payment.amount, settings.currency)}
+                                    {payment.paymentMethod && ` • ${payment.paymentMethod}`}
                                   </Typography>
                                 </Box>
-                                {payment.notes && (
-                                  <Typography variant="body2" sx={{ mt: 2, fontStyle: 'italic', color: 'text.secondary' }}>
-                                    {payment.notes}
-                                  </Typography>
-                                )}
-                              </CardContent>
-                            </Card>
-                          );
-                        })}
-                      </Stack>
+                              </Box>
+                            );
+                          })}
+                        </Stack>
+                      </Box>
+                    )}
+
+                    <Box sx={{ mt: 3, display: 'flex', gap: 1, justifyContent: 'center' }}>
+                      <Button
+                        startIcon={<WorkIcon />}
+                        onClick={handleAddWorkDay}
+                        variant="outlined"
+                        size="small"
+                      >
+                        Add Work Day
+                      </Button>
+                      <Button
+                        startIcon={<PaymentIcon />}
+                        onClick={handleAddPayment}
+                        variant="outlined"
+                        size="small"
+                        color="secondary"
+                      >
+                        Add Payment
+                      </Button>
                     </Box>
-                  )}
-                </Stack>
-              );
-            })()}
+                  </>
+                );
+              })()}
+            </CardContent>
           </Paper>
         </Slide>
       )}
