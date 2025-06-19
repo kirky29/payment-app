@@ -877,7 +877,7 @@ const Employees = () => {
         <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2, mb: 4 }} />
         <Grid container spacing={2}>
           {[1, 2, 3, 4].map((item) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} xl={2} key={item}>
+            <Grid item xs={12} sm={12} md={6} lg={4} xl={3} key={item}>
               <Skeleton variant="rectangular" height={180} sx={{ borderRadius: 2 }} />
             </Grid>
           ))}
@@ -1153,10 +1153,10 @@ const Employees = () => {
                 <Grid 
                   item 
                   xs={12} 
-                  sm={6} 
-                  md={4} 
-                  lg={3} 
-                  xl={2}
+                  sm={12} 
+                  md={6} 
+                  lg={4} 
+                  xl={3}
                   key={employee.id}
                   sx={{
                     display: 'flex',
