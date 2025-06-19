@@ -390,20 +390,13 @@ const Layout = ({ children }) => {
           pb: isMobile ? '72px' : 2,
         }}
       >
-        <Container 
-          maxWidth="xl" 
-          sx={{ 
-            py: { xs: 1, sm: 2 },
-            px: { xs: 1, sm: 2 },
-          }}
-        >
-          <Box sx={{ 
-            maxWidth: '1400px', 
-            mx: 'auto',
-          }}>
-            {children}
-          </Box>
-        </Container>
+        <Box sx={{ 
+          width: '100%',
+          py: { xs: 1, sm: 2 },
+          px: { xs: 1, sm: 2 },
+        }}>
+          {children}
+        </Box>
       </Box>
 
       {/* Enhanced Bottom Navigation - Mobile Only */}
