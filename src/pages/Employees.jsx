@@ -1084,7 +1084,14 @@ const Employees = () => {
       )}
 
       {/* Employees List/Grid */}
-      <Container maxWidth="xl" sx={{ px: isMobile ? 1 : 2, pb: isMobile ? 8 : 4 }}>
+      <Container 
+        maxWidth="lg" 
+        sx={{ 
+          px: isMobile ? 1 : 2, 
+          pb: isMobile ? 8 : 4,
+          height: '100%',
+        }}
+      >
         {filteredAndSortedEmployees.length === 0 ? (
           <Fade in timeout={900}>
             <Paper sx={{ p: 6, textAlign: 'center', borderRadius: 2, mt: 2 }}>
@@ -1129,20 +1136,40 @@ const Employees = () => {
           </List>
         ) : (
           // Desktop grid view
-          <Grid container spacing={3} sx={{ mt: 1 }}>
+          <Grid 
+            container 
+            spacing={2}
+            sx={{ 
+              mt: 1,
+              width: '100%',
+              margin: '0 auto',
+            }}
+          >
             {filteredAndSortedEmployees.map((employee, index) => {
               const totals = calculateEmployeeTotals(employee.id);
               return (
-                <Grid item xs={12} sm={6} lg={4} key={employee.id}>
-                  <EmployeeCard
-                    employee={employee}
-                    totals={totals}
-                    onViewDetails={handleViewDetails}
-                    onMenuClick={handleMenuClick}
-                    onCardClick={() => handleViewDetails(employee)}
-                    isMobile={isMobile}
-                    index={index}
-                  />
+                <Grid 
+                  item 
+                  xs={12} 
+                  sm={6} 
+                  md={6} 
+                  lg={4} 
+                  key={employee.id}
+                  sx={{
+                    display: 'flex',
+                  }}
+                >
+                  <Box sx={{ width: '100%' }}>
+                    <EmployeeCard
+                      employee={employee}
+                      totals={totals}
+                      onViewDetails={handleViewDetails}
+                      onMenuClick={handleMenuClick}
+                      onCardClick={() => handleViewDetails(employee)}
+                      isMobile={isMobile}
+                      index={index}
+                    />
+                  </Box>
                 </Grid>
               );
             })}
