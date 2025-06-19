@@ -43,6 +43,8 @@ import {
   Collapse,
   useScrollTrigger,
   Container,
+  InputAdornment,
+  Tooltip,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -67,6 +69,7 @@ import {
   ExpandLess as ExpandLessIcon,
   FilterList as FilterListIcon,
   Clear as ClearIcon,
+  Search as SearchIcon,
 } from '@mui/icons-material';
 import { useApp } from '../contexts/AppContext';
 import { formatCurrency } from '../utils/currency';
@@ -94,102 +97,87 @@ const EmployeeCard = ({
           cursor: 'pointer',
           '&:hover': { 
             transform: 'translateY(-2px)',
-            boxShadow: isMobile ? 4 : 8,
+            boxShadow: theme.shadows[8],
           },
           '&:active': {
             transform: 'translateY(0px)',
           },
           transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-          borderRadius: isMobile ? 2 : 3,
+          borderRadius: 2,
           overflow: 'hidden',
           position: 'relative',
-          background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
           height: '100%',
-          border: isOutstanding ? '2px solid' : '1px solid',
-          borderColor: isOutstanding ? 'warning.main' : 'divider',
+          border: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
         }}
         onClick={onCardClick}
       >
-        {/* Status indicator */}
         {isOutstanding && (
           <Box
             sx={{
               position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 3,
+              top: 12,
+              right: 12,
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
               bgcolor: 'warning.main',
-              zIndex: 1,
+              boxShadow: '0 0 0 3px rgba(255, 152, 0, 0.2)',
             }}
           />
         )}
-
-        {/* Progress Bar */}
-        <LinearProgress 
-          variant="determinate" 
-          value={Math.min(progress, 100)} 
-          sx={{ 
-            height: 3,
-            backgroundColor: 'rgba(0,0,0,0.08)',
-            '& .MuiLinearProgress-bar': {
-              background: progress >= 100 ? 
-                'linear-gradient(90deg, #4caf50, #66bb6a)' : 
-                'linear-gradient(90deg, #ff9800, #ffb74d)',
-            }
-          }} 
-        />
         
-        <CardContent sx={{ p: isMobile ? 2.5 : 3, pb: isMobile ? 2.5 : 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2.5 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
-              <Avatar 
+        <CardContent sx={{ p: 2.5, pb: '16px !important' }}>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
+            <Avatar 
+              sx={{ 
+                width: 48,
+                height: 48,
+                fontSize: '1.25rem',
+                fontWeight: 600,
+                color: 'white',
+                background: isOutstanding 
+                  ? 'linear-gradient(135deg, #ff9800 0%, #ed6c02 100%)'
+                  : isInCredit
+                  ? 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)'
+                  : 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              }}
+            >
+              {employee.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '??'}
+            </Avatar>
+            
+            <Box sx={{ flex: 1, ml: 2, minWidth: 0 }}>
+              <Typography 
+                variant="subtitle1"
                 sx={{ 
-                  mr: 2,
-                  background: isOutstanding 
-                    ? 'linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)'
-                    : isInCredit
-                    ? 'linear-gradient(135deg, #2196f3 0%, #64b5f6 100%)'
-                    : 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
-                  width: isMobile ? 48 : 56,
-                  height: isMobile ? 48 : 56,
-                  fontSize: isMobile ? '1rem' : '1.25rem',
                   fontWeight: 600,
-                  boxShadow: 2,
-                  flexShrink: 0,
+                  fontSize: '1rem',
+                  lineHeight: 1.2,
+                  mb: 0.5,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                {employee.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '??'}
-              </Avatar>
-              <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography 
-                  variant="h6" 
-                  component="h2" 
-                  sx={{ 
-                    fontWeight: 600, 
-                    mb: 0.5,
-                    fontSize: isMobile ? '1rem' : '1.25rem',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {employee.name}
-                </Typography>
-                <Typography 
-                  variant="body2" 
-                  color="text.secondary"
-                  sx={{ 
-                    fontSize: isMobile ? '0.8rem' : '0.875rem',
-                    fontWeight: 500,
-                    lineHeight: 1.3,
-                  }}
-                >
-                  {formatCurrency(employee.dailyRate, 'USD')}/day
-                </Typography>
-              </Box>
+                {employee.name}
+              </Typography>
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ 
+                  fontSize: '0.875rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                }}
+              >
+                <MoneyIcon sx={{ fontSize: '1rem', opacity: 0.7 }} />
+                {formatCurrency(employee.dailyRate, 'USD')}/day
+              </Typography>
             </Box>
+
             <IconButton
               onClick={(e) => {
                 e.stopPropagation();
@@ -197,123 +185,110 @@ const EmployeeCard = ({
               }}
               size="small"
               sx={{ 
-                bgcolor: 'rgba(0,0,0,0.04)',
-                '&:hover': { bgcolor: 'rgba(0,0,0,0.08)' },
-                width: isMobile ? 32 : 40,
-                height: isMobile ? 32 : 40,
-                flexShrink: 0,
                 ml: 1,
+                color: 'text.secondary',
+                '&:hover': { 
+                  bgcolor: 'action.hover',
+                  color: 'text.primary',
+                },
               }}
             >
               <MoreVertIcon fontSize="small" />
             </IconButton>
           </Box>
 
-          {/* Quick Stats */}
-          <Grid container spacing={1.5} sx={{ mb: 2.5 }}>
-            <Grid item xs={6}>
-              <Box sx={{ 
-                textAlign: 'center', 
-                p: isMobile ? 1.5 : 2, 
-                bgcolor: 'primary.light', 
-                borderRadius: 1.5,
-                boxShadow: 1,
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-              }}>
-                <Typography 
-                  variant={isMobile ? "body2" : "h6"} 
-                  sx={{ 
-                    fontWeight: 600, 
-                    color: 'primary.contrastText',
-                    fontSize: isMobile ? '0.75rem' : '1rem',
-                    lineHeight: 1.2,
-                    mb: 0.5,
-                  }}
-                >
-                  {formatCurrency(totals.totalOwed, 'USD')}
-                </Typography>
-                <Typography 
-                  variant="caption" 
-                  sx={{ 
-                    color: 'primary.contrastText', 
-                    opacity: 0.9,
-                    fontSize: isMobile ? '0.65rem' : '0.75rem',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  Owed
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={6}>
-              <Box sx={{ 
-                textAlign: 'center', 
-                p: isMobile ? 1.5 : 2, 
-                bgcolor: 'success.light', 
-                borderRadius: 1.5,
-                boxShadow: 1,
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-              }}>
-                <Typography 
-                  variant={isMobile ? "body2" : "h6"} 
-                  sx={{ 
-                    fontWeight: 600, 
-                    color: 'success.contrastText',
-                    fontSize: isMobile ? '0.75rem' : '1rem',
-                    lineHeight: 1.2,
-                    mb: 0.5,
-                  }}
-                >
-                  {formatCurrency(totals.totalPaid, 'USD')}
-                </Typography>
-                <Typography 
-                  variant="caption" 
-                  sx={{ 
-                    color: 'success.contrastText', 
-                    opacity: 0.9,
-                    fontSize: isMobile ? '0.65rem' : '0.75rem',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  Paid
-                </Typography>
-              </Box>
-            </Grid>
-          </Grid>
-
-          {/* Outstanding Amount */}
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography 
-              variant="body2" 
-              color="text.secondary" 
-              display="block" 
-              sx={{ 
-                mb: 1,
-                fontSize: isMobile ? '0.75rem' : '0.875rem',
-                fontWeight: 500,
-              }}
-            >
-              {totals.outstanding < 0 ? 'In Credit' : 'Outstanding'}
-            </Typography>
-            <Chip
-              label={formatCurrency(Math.abs(totals.outstanding), 'USD')}
-              color={totals.outstanding > 0 ? 'warning' : totals.outstanding < 0 ? 'info' : 'success'}
-              size="small"
-              icon={totals.outstanding > 0 ? <WarningIcon /> : totals.outstanding < 0 ? <InfoIcon /> : <CheckCircleIcon />}
-              sx={{ 
-                fontWeight: 600,
-                fontSize: isMobile ? '0.7rem' : '0.875rem',
-                boxShadow: 1,
-                height: isMobile ? 24 : 28,
+          <Box sx={{ mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ fontSize: '0.75rem' }}
+              >
+                Payment Progress
+              </Typography>
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ fontSize: '0.75rem' }}
+              >
+                {Math.round(progress)}%
+              </Typography>
+            </Box>
+            <LinearProgress 
+              variant="determinate" 
+              value={progress}
+              sx={{
+                height: 4,
+                borderRadius: 2,
+                bgcolor: 'action.hover',
+                '& .MuiLinearProgress-bar': {
+                  borderRadius: 2,
+                  background: isOutstanding 
+                    ? 'linear-gradient(90deg, #ff9800 0%, #ed6c02 100%)'
+                    : isInCredit
+                    ? 'linear-gradient(90deg, #2196f3 0%, #1976d2 100%)'
+                    : 'linear-gradient(90deg, #4caf50 0%, #2e7d32 100%)',
+                },
               }}
             />
           </Box>
+
+          <Stack 
+            direction="row" 
+            spacing={2} 
+            sx={{ 
+              p: 1.5,
+              bgcolor: 'action.hover',
+              borderRadius: 1.5,
+              mt: 'auto',
+            }}
+          >
+            <Box sx={{ flex: 1 }}>
+              <Typography 
+                variant="caption" 
+                color="text.secondary"
+                sx={{ 
+                  display: 'block',
+                  mb: 0.5,
+                  fontSize: '0.75rem',
+                }}
+              >
+                Total Owed
+              </Typography>
+              <Typography 
+                variant="subtitle2"
+                sx={{ 
+                  fontWeight: 600,
+                  color: 'text.primary',
+                }}
+              >
+                {formatCurrency(totals.totalOwed, 'USD')}
+              </Typography>
+            </Box>
+            
+            <Box sx={{ flex: 1 }}>
+              <Typography 
+                variant="caption" 
+                color="text.secondary"
+                sx={{ 
+                  display: 'block',
+                  mb: 0.5,
+                  fontSize: '0.75rem',
+                }}
+              >
+                Outstanding
+              </Typography>
+              <Typography 
+                variant="subtitle2"
+                sx={{ 
+                  fontWeight: 600,
+                  color: isOutstanding ? 'warning.main' : isInCredit ? 'info.main' : 'success.main',
+                }}
+              >
+                {formatCurrency(Math.abs(totals.outstanding), 'USD')}
+              </Typography>
+            </Box>
+          </Stack>
         </CardContent>
       </Card>
     </Grow>
@@ -331,18 +306,19 @@ const EmployeeListItem = ({
 }) => {
   const isOutstanding = totals.outstanding > 0;
   const isInCredit = totals.outstanding < 0;
+  const progress = totals.totalOwed > 0 ? (totals.totalPaid / totals.totalOwed) * 100 : 100;
 
   return (
     <Grow in timeout={200 + (index * 30)}>
       <ListItem
         sx={{
           bgcolor: 'background.paper',
-          mb: 1,
+          mb: 1.5,
           borderRadius: 2,
-          border: isOutstanding ? '1px solid' : '1px solid',
-          borderColor: isOutstanding ? 'warning.main' : 'divider',
-          borderLeft: isOutstanding ? '4px solid' : '1px solid',
-          borderLeftColor: isOutstanding ? 'warning.main' : 'divider',
+          border: '1px solid',
+          borderColor: 'divider',
+          p: 0,
+          overflow: 'hidden',
           cursor: 'pointer',
           '&:hover': {
             bgcolor: 'action.hover',
@@ -352,71 +328,185 @@ const EmployeeListItem = ({
             transform: 'translateX(0px)',
           },
           transition: 'all 0.2s ease',
-          px: 2,
-          py: 1.5,
         }}
         onClick={() => onViewDetails(employee)}
       >
-        <ListItemAvatar sx={{ minWidth: 56 }}>
-          <Avatar 
-            sx={{ 
-              background: isOutstanding 
-                ? 'linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)'
-                : isInCredit
-                ? 'linear-gradient(135deg, #2196f3 0%, #64b5f6 100%)'
-                : 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
-              width: 48,
-              height: 48,
-              fontSize: '1rem',
-              fontWeight: 600,
+        {isOutstanding && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 12,
+              left: 12,
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              bgcolor: 'warning.main',
+              boxShadow: '0 0 0 3px rgba(255, 152, 0, 0.2)',
+              zIndex: 1,
             }}
-          >
-            {employee.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '??'}
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText
-          primary={
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: '1rem', mb: 0.5 }}>
-              {employee.name}
-            </Typography>
-          }
-          secondary={
-            <Box>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontSize: '0.875rem' }}>
+          />
+        )}
+        
+        <Box sx={{ width: '100%', p: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
+            <Avatar 
+              sx={{ 
+                width: 40,
+                height: 40,
+                fontSize: '1rem',
+                fontWeight: 600,
+                color: 'white',
+                background: isOutstanding 
+                  ? 'linear-gradient(135deg, #ff9800 0%, #ed6c02 100%)'
+                  : isInCredit
+                  ? 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)'
+                  : 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              }}
+            >
+              {employee.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '??'}
+            </Avatar>
+            
+            <Box sx={{ flex: 1, ml: 2, minWidth: 0 }}>
+              <Typography 
+                variant="subtitle1"
+                sx={{ 
+                  fontWeight: 600,
+                  fontSize: '1rem',
+                  lineHeight: 1.2,
+                  mb: 0.5,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {employee.name}
+              </Typography>
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ 
+                  fontSize: '0.875rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                }}
+              >
+                <MoneyIcon sx={{ fontSize: '1rem', opacity: 0.7 }} />
                 {formatCurrency(employee.dailyRate, 'USD')}/day
               </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                <Chip
-                  label={formatCurrency(Math.abs(totals.outstanding), 'USD')}
-                  color={totals.outstanding > 0 ? 'warning' : totals.outstanding < 0 ? 'info' : 'success'}
-                  size="small"
-                  sx={{ fontSize: '0.7rem', height: 20 }}
-                />
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                  {totals.outstanding < 0 ? 'In Credit' : 'Outstanding'}
-                </Typography>
-              </Box>
             </Box>
-          }
-          sx={{ mr: 1 }}
-        />
-        <ListItemSecondaryAction>
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              onMenuClick(e, employee);
-            }}
-            size="small"
+
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                onMenuClick(e, employee);
+              }}
+              size="small"
+              sx={{ 
+                color: 'text.secondary',
+                '&:hover': { 
+                  bgcolor: 'action.hover',
+                  color: 'text.primary',
+                },
+              }}
+            >
+              <MoreVertIcon fontSize="small" />
+            </IconButton>
+          </Box>
+
+          <Box sx={{ mb: 1.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ fontSize: '0.75rem' }}
+              >
+                Payment Progress
+              </Typography>
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ fontSize: '0.75rem' }}
+              >
+                {Math.round(progress)}%
+              </Typography>
+            </Box>
+            <LinearProgress 
+              variant="determinate" 
+              value={progress}
+              sx={{
+                height: 3,
+                borderRadius: 1.5,
+                bgcolor: 'action.hover',
+                '& .MuiLinearProgress-bar': {
+                  borderRadius: 1.5,
+                  background: isOutstanding 
+                    ? 'linear-gradient(90deg, #ff9800 0%, #ed6c02 100%)'
+                    : isInCredit
+                    ? 'linear-gradient(90deg, #2196f3 0%, #1976d2 100%)'
+                    : 'linear-gradient(90deg, #4caf50 0%, #2e7d32 100%)',
+                },
+              }}
+            />
+          </Box>
+
+          <Stack 
+            direction="row" 
+            spacing={2} 
             sx={{ 
-              bgcolor: 'rgba(0,0,0,0.04)',
-              '&:hover': { bgcolor: 'rgba(0,0,0,0.08)' },
-              width: 36,
-              height: 36,
+              p: 1.5,
+              bgcolor: 'action.hover',
+              borderRadius: 1.5,
             }}
           >
-            <MoreVertIcon fontSize="small" />
-          </IconButton>
-        </ListItemSecondaryAction>
+            <Box sx={{ flex: 1 }}>
+              <Typography 
+                variant="caption" 
+                color="text.secondary"
+                sx={{ 
+                  display: 'block',
+                  mb: 0.5,
+                  fontSize: '0.75rem',
+                }}
+              >
+                Total Owed
+              </Typography>
+              <Typography 
+                variant="subtitle2"
+                sx={{ 
+                  fontWeight: 600,
+                  color: 'text.primary',
+                }}
+              >
+                {formatCurrency(totals.totalOwed, 'USD')}
+              </Typography>
+            </Box>
+            
+            <Box sx={{ flex: 1 }}>
+              <Typography 
+                variant="caption" 
+                color="text.secondary"
+                sx={{ 
+                  display: 'block',
+                  mb: 0.5,
+                  fontSize: '0.75rem',
+                }}
+              >
+                Outstanding
+              </Typography>
+              <Typography 
+                variant="subtitle2"
+                sx={{ 
+                  fontWeight: 600,
+                  color: isOutstanding ? 'warning.main' : isInCredit ? 'info.main' : 'success.main',
+                }}
+              >
+                {formatCurrency(Math.abs(totals.outstanding), 'USD')}
+              </Typography>
+            </Box>
+          </Stack>
+        </Box>
       </ListItem>
     </Grow>
   );
@@ -426,78 +516,181 @@ const EmployeeListItem = ({
 const StatsSummary = ({ stats, isExpanded, onToggle, isMobile }) => {
   return (
     <Paper
-      elevation={isMobile ? 0 : 1}
+      elevation={0}
       sx={{
-        borderRadius: isMobile ? 0 : 2,
-        border: isMobile ? 'none' : '1px solid',
+        borderRadius: 2,
+        border: '1px solid',
         borderColor: 'divider',
         overflow: 'hidden',
+        bgcolor: 'background.paper',
+        mb: 2,
       }}
     >
       <Box
         onClick={onToggle}
         sx={{
-          p: isMobile ? 2 : 3,
+          p: 2,
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          bgcolor: 'background.paper',
           '&:hover': {
             bgcolor: 'action.hover',
           },
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <GroupIcon color="primary" />
-          <Typography variant="h6" sx={{ fontWeight: 600, fontSize: isMobile ? '1.1rem' : '1.25rem' }}>
-            Team Summary
-          </Typography>
+          <Avatar
+            sx={{
+              bgcolor: 'primary.soft',
+              width: 40,
+              height: 40,
+              color: 'primary.main',
+            }}
+          >
+            <TrendingUpIcon />
+          </Avatar>
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem', lineHeight: 1.2 }}>
+              Team Overview
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+              {stats.totalEmployees} team members • {stats.needingAttention} need attention
+            </Typography>
+          </Box>
         </Box>
         {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
       </Box>
 
       <Collapse in={isExpanded}>
-        <Box sx={{ p: isMobile ? 2 : 3, pt: 0 }}>
-          <Grid container spacing={isMobile ? 2 : 3}>
-            <Grid item xs={6} sm={3}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h4" color="primary" sx={{ fontWeight: 700, fontSize: isMobile ? '1.75rem' : '2.125rem' }}>
-                  {stats.totalEmployees}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}>
-                  Employees
-                </Typography>
+        <Divider />
+        <Box sx={{ p: 2 }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6} md={3}>
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: 'primary.soft',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  gap: 1,
+                }}
+              >
+                <Avatar
+                  sx={{
+                    bgcolor: 'primary.main',
+                    width: 32,
+                    height: 32,
+                  }}
+                >
+                  <GroupIcon sx={{ fontSize: '1.25rem' }} />
+                </Avatar>
+                <Box>
+                  <Typography variant="h5" color="primary.main" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                    {stats.totalEmployees}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                    Total Members
+                  </Typography>
+                </Box>
               </Box>
             </Grid>
-            <Grid item xs={6} sm={3}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h4" color="warning.main" sx={{ fontWeight: 700, fontSize: isMobile ? '1.75rem' : '2.125rem' }}>
-                  {stats.needingAttention}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}>
-                  Need Attention
-                </Typography>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: 'warning.soft',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  gap: 1,
+                }}
+              >
+                <Avatar
+                  sx={{
+                    bgcolor: 'warning.main',
+                    width: 32,
+                    height: 32,
+                  }}
+                >
+                  <WarningIcon sx={{ fontSize: '1.25rem' }} />
+                </Avatar>
+                <Box>
+                  <Typography variant="h5" color="warning.main" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                    {stats.needingAttention}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                    Need Attention
+                  </Typography>
+                </Box>
               </Box>
             </Grid>
-            <Grid item xs={6} sm={3}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h4" color="error.main" sx={{ fontWeight: 700, fontSize: isMobile ? '1.75rem' : '2.125rem' }}>
-                  {formatCurrency(stats.totalOwed, 'USD')}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}>
-                  Total Owed
-                </Typography>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: 'error.soft',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  gap: 1,
+                }}
+              >
+                <Avatar
+                  sx={{
+                    bgcolor: 'error.main',
+                    width: 32,
+                    height: 32,
+                  }}
+                >
+                  <MoneyIcon sx={{ fontSize: '1.25rem' }} />
+                </Avatar>
+                <Box>
+                  <Typography variant="h5" color="error.main" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                    {formatCurrency(stats.totalOwed, 'USD')}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                    Total Owed
+                  </Typography>
+                </Box>
               </Box>
             </Grid>
-            <Grid item xs={6} sm={3}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h4" color="success.main" sx={{ fontWeight: 700, fontSize: isMobile ? '1.75rem' : '2.125rem' }}>
-                  {formatCurrency(stats.totalPaid, 'USD')}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}>
-                  Total Paid
-                </Typography>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: 'success.soft',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  gap: 1,
+                }}
+              >
+                <Avatar
+                  sx={{
+                    bgcolor: 'success.main',
+                    width: 32,
+                    height: 32,
+                  }}
+                >
+                  <CheckCircleIcon sx={{ fontSize: '1.25rem' }} />
+                </Avatar>
+                <Box>
+                  <Typography variant="h5" color="success.main" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                    {formatCurrency(stats.totalPaid, 'USD')}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                    Total Paid
+                  </Typography>
+                </Box>
               </Box>
             </Grid>
           </Grid>
@@ -697,80 +890,138 @@ const Employees = () => {
     <Box sx={{ width: '100%', minHeight: '100vh', bgcolor: 'background.default' }}>
       {/* Mobile-optimized header */}
       <Paper
-        elevation={isMobile ? 0 : 1}
+        elevation={0}
         sx={{
           position: 'sticky',
           top: 0,
           zIndex: 1000,
-          borderRadius: isMobile ? 0 : 2,
-          mb: isMobile ? 0 : 2,
-          border: isMobile ? 'none' : '1px solid',
+          borderRadius: 0,
+          mb: 0,
+          background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+          borderBottom: '1px solid',
           borderColor: 'divider',
         }}
       >
-        <Box 
-          sx={{ 
-            px: isMobile ? 2 : 3,
-            py: isMobile ? 2 : 2.5,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            bgcolor: 'background.paper',
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <PersonIcon color="primary" sx={{ fontSize: isMobile ? '1.5rem' : '2rem' }} />
-            <Typography 
-              variant="h5" 
-              component="h1" 
-              sx={{ 
-                fontWeight: 600,
-                fontSize: isMobile ? '1.5rem' : '2rem',
-                color: 'text.primary',
-              }}
-            >
-              Team
-            </Typography>
-            <Badge badgeContent={totalStats.totalEmployees} color="primary" max={99}>
-              <Box />
-            </Badge>
-          </Box>
+        <Container maxWidth="xl">
+          <Box 
+            sx={{ 
+              px: 2,
+              py: 1.5,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
+              <Avatar 
+                sx={{ 
+                  bgcolor: 'primary.main',
+                  width: 40,
+                  height: 40,
+                }}
+              >
+                <PersonIcon />
+              </Avatar>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography 
+                  variant="h6" 
+                  component="h1" 
+                  sx={{ 
+                    fontWeight: 600,
+                    fontSize: '1.25rem',
+                    color: 'text.primary',
+                    lineHeight: 1.2,
+                  }}
+                >
+                  Team
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: 'text.secondary',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  {totalStats.totalEmployees} {totalStats.totalEmployees === 1 ? 'member' : 'members'}
+                </Typography>
+              </Box>
+            </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton
-              onClick={() => setShowFilters(!showFilters)}
-              sx={{ 
-                color: 'text.secondary',
-                '&:hover': { color: 'primary.main' },
-                '&:active': { transform: 'scale(0.95)' },
-                width: 40,
-                height: 40,
-              }}
-            >
-              <FilterListIcon />
-            </IconButton>
-            <IconButton
-              onClick={handleRefresh}
-              sx={{ 
-                color: 'text.secondary',
-                '&:hover': { color: 'primary.main' },
-                '&:active': { transform: 'scale(0.95)' },
-                width: 40,
-                height: 40,
-              }}
-            >
-              <RefreshIcon />
-            </IconButton>
-          </Box>
-        </Box>
+            <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <TextField
+                placeholder="Search team members..."
+                size="small"
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: 'text.secondary' }} />
+                    </InputAdornment>
+                  ),
+                  sx: {
+                    bgcolor: 'background.paper',
+                    '& fieldset': {
+                      borderColor: 'divider',
+                    },
+                  },
+                }}
+                sx={{ 
+                  maxWidth: 300,
+                  display: { xs: 'none', sm: 'block' },
+                }}
+              />
+              
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Tooltip title="Filter">
+                  <IconButton
+                    onClick={() => setShowFilters(!showFilters)}
+                    color={showFilters ? 'primary' : 'default'}
+                    sx={{ 
+                      bgcolor: showFilters ? 'primary.soft' : 'transparent',
+                      border: '1px solid',
+                      borderColor: showFilters ? 'primary.main' : 'divider',
+                      '&:hover': {
+                        bgcolor: showFilters ? 'primary.soft' : 'action.hover',
+                      },
+                    }}
+                  >
+                    <FilterListIcon />
+                  </IconButton>
+                </Tooltip>
+                
+                <Tooltip title="View stats">
+                  <IconButton
+                    onClick={() => setShowStats(!showStats)}
+                    color={showStats ? 'primary' : 'default'}
+                    sx={{ 
+                      bgcolor: showStats ? 'primary.soft' : 'transparent',
+                      border: '1px solid',
+                      borderColor: showStats ? 'primary.main' : 'divider',
+                      '&:hover': {
+                        bgcolor: showStats ? 'primary.soft' : 'action.hover',
+                      },
+                    }}
+                  >
+                    <TrendingUpIcon />
+                  </IconButton>
+                </Tooltip>
 
-        {/* Stats summary toggle */}
-        <StatsSummary 
-          stats={totalStats}
-          isExpanded={showStats}
-          onToggle={() => setShowStats(!showStats)}
-          isMobile={isMobile}
-        />
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => handleOpenDialog()}
+                  sx={{
+                    bgcolor: 'success.main',
+                    '&:hover': { bgcolor: 'success.dark' },
+                    display: { xs: 'none', sm: 'flex' },
+                  }}
+                >
+                  Add Member
+                </Button>
+              </Box>
+            </Box>
+          </Box>
+        </Container>
       </Paper>
 
       {/* Filter Controls */}
