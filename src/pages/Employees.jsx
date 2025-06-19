@@ -1085,11 +1085,12 @@ const Employees = () => {
 
       {/* Employees List/Grid */}
       <Container 
-        maxWidth="lg" 
+        maxWidth={false} 
         sx={{ 
           px: isMobile ? 1 : 2, 
           pb: isMobile ? 8 : 4,
           height: '100%',
+          maxWidth: '100%',
         }}
       >
         {filteredAndSortedEmployees.length === 0 ? (
@@ -1143,6 +1144,8 @@ const Employees = () => {
               mt: 1,
               width: '100%',
               margin: '0 auto',
+              display: 'flex',
+              flexGrow: 1,
             }}
           >
             {filteredAndSortedEmployees.map((employee, index) => {
@@ -1152,14 +1155,16 @@ const Employees = () => {
                   item 
                   xs={12} 
                   sm={6} 
-                  md={6} 
-                  lg={4} 
+                  md={4} 
+                  lg={3} 
+                  xl={2}
                   key={employee.id}
                   sx={{
                     display: 'flex',
+                    width: '100%',
                   }}
                 >
-                  <Box sx={{ width: '100%' }}>
+                  <Box sx={{ width: '100%', height: '100%' }}>
                     <EmployeeCard
                       employee={employee}
                       totals={totals}
