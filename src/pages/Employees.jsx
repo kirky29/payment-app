@@ -285,14 +285,24 @@ const Employees = () => {
   }
 
   return (
-    <Box sx={{ width: '100%', minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box 
+      sx={{ 
+        width: '100%',
+        minHeight: '100vh',
+        bgcolor: 'background.default',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+      }}
+    >
       {/* Header */}
       <Box sx={{ 
         bgcolor: 'background.paper', 
         borderBottom: '1px solid', 
         borderColor: 'divider',
-        p: 3,
-        mb: 3,
+        px: isMobile ? 2 : 3,
+        py: isMobile ? 2 : 3,
+        mb: 0,
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
           <Box>
@@ -335,7 +345,7 @@ const Employees = () => {
       </Box>
 
       {/* Employee Grid */}
-      <Box sx={{ px: 3, pb: isMobile ? 10 : 3 }}>
+      <Box sx={{ flex: 1, px: isMobile ? 1 : 2, py: 2, pb: isMobile ? 10 : 3 }}>
         {filteredEmployees.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 8 }}>
             <PersonIcon sx={{ fontSize: 80, color: 'text.secondary', mb: 2 }} />
@@ -363,7 +373,7 @@ const Employees = () => {
               xs: '1fr',
               sm: 'repeat(auto-fit, minmax(300px, 1fr))',
             },
-            gap: 3,
+            gap: isMobile ? 2 : 3,
             width: '100%',
           }}>
             {filteredEmployees.map((employee, index) => {
