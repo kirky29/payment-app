@@ -222,7 +222,7 @@ const CalendarDay = ({
 };
 
 // Month statistics component
-const MonthStats = ({ stats, isExpanded, onToggle, isMobile }) => {
+const MonthStats = ({ stats, isExpanded, onToggle, isMobile, settings }) => {
   const theme = useTheme();
   
   return (
@@ -275,7 +275,7 @@ const MonthStats = ({ stats, isExpanded, onToggle, isMobile }) => {
             <Grid item xs={6} sm={4}>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h4" color="success.main" sx={{ fontWeight: 700 }}>
-                  {formatCurrency(stats.totalPayments, 'GBP')}
+                  {formatCurrency(stats.totalPayments, settings?.currency || 'USD')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Paid
@@ -289,7 +289,7 @@ const MonthStats = ({ stats, isExpanded, onToggle, isMobile }) => {
                   color={stats.totalOwed - stats.totalPayments > 0 ? 'warning.main' : 'success.main'} 
                   sx={{ fontWeight: 700 }}
                 >
-                  {formatCurrency(stats.totalOwed - stats.totalPayments, 'GBP')}
+                  {formatCurrency(stats.totalOwed - stats.totalPayments, settings?.currency || 'USD')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Outstanding
@@ -577,6 +577,7 @@ const Calendar = () => {
           isExpanded={showMonthStats}
           onToggle={() => setShowMonthStats(!showMonthStats)}
           isMobile={isMobile}
+          settings={settings}
         />
       </Paper>
 
