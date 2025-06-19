@@ -26,6 +26,7 @@ import {
   Fade,
   Badge,
   Divider,
+  AspectRatio,
 } from '@mui/material';
 import {
   ChevronLeft as ChevronLeftIcon,
@@ -257,32 +258,33 @@ const Calendar = () => {
         <Paper 
           elevation={0}
           sx={{ 
-            p: { xs: 3, sm: 4 },
-            mb: 4,
+            p: { xs: 2, sm: 3 },
+            mb: 3,
             background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
             borderRadius: 3,
           }}
         >
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Box>
               <Typography 
-                variant="h4" 
+                variant="h5" 
                 component="h1" 
                 sx={{ 
                   fontWeight: 700,
-                  fontSize: { xs: '1.75rem', sm: '2.25rem' },
+                  fontSize: { xs: '1.25rem', sm: '1.5rem' },
                   color: 'primary.main',
-                  mb: 1,
+                  display: 'flex',
+                  alignItems: 'center',
                 }}
               >
-                <EventIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                <EventIcon sx={{ mr: 1 }} />
                 Work Calendar
               </Typography>
               <Typography 
-                variant="body1" 
+                variant="body2" 
                 color="text.secondary"
                 sx={{ 
-                  fontSize: { xs: '1rem', sm: '1.125rem' },
+                  fontSize: { xs: '0.875rem', sm: '1rem' },
                 }}
               >
                 Track work days and payments
@@ -291,15 +293,15 @@ const Calendar = () => {
             {!isMobile && (
               <Button
                 variant="contained"
-                size="large"
+                size="medium"
                 startIcon={<TodayIcon />}
                 onClick={() => setCurrentDate(new Date())}
                 sx={{
                   background: 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)',
                   boxShadow: '0 4px 15px rgba(33, 150, 243, 0.3)',
-                  px: 3,
-                  py: 1.5,
-                  fontSize: '1rem',
+                  px: 2,
+                  py: 1,
+                  fontSize: '0.875rem',
                   '&:hover': {
                     background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
                     transform: 'translateY(-2px)',
@@ -314,28 +316,28 @@ const Calendar = () => {
           </Box>
 
           {/* Month Navigation */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 2 }}>
             <IconButton
               onClick={() => setCurrentDate(subMonths(currentDate, 1))}
-              size="large"
+              size="medium"
               sx={{ 
                 bgcolor: 'rgba(255,255,255,0.8)',
                 '&:hover': { bgcolor: 'rgba(255,255,255,1)', transform: 'scale(1.1)' },
                 mr: 2,
-                width: 56,
-                height: 56,
+                width: 40,
+                height: 40,
                 boxShadow: 2,
               }}
             >
-              <ChevronLeftIcon fontSize="large" />
+              <ChevronLeftIcon />
             </IconButton>
             
-            <Box sx={{ textAlign: 'center', minWidth: 200 }}>
+            <Box sx={{ textAlign: 'center', minWidth: 180 }}>
               <Typography 
-                variant="h5" 
+                variant="h6" 
                 sx={{ 
                   fontWeight: 600,
-                  fontSize: { xs: '1.5rem', sm: '1.75rem' },
+                  fontSize: { xs: '1.25rem', sm: '1.5rem' },
                   color: 'primary.main',
                   mb: 0.5,
                 }}
@@ -343,29 +345,29 @@ const Calendar = () => {
                 {format(currentDate, 'MMMM yyyy')}
               </Typography>
               {isMobile && (
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                  <SwipeLeftIcon fontSize="small" sx={{ color: 'text.secondary' }} />
-                  <Typography variant="caption" color="text.secondary">
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                  <SwipeLeftIcon fontSize="small" sx={{ color: 'text.secondary', fontSize: '1rem' }} />
+                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
                     Swipe to navigate
                   </Typography>
-                  <SwipeRightIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                  <SwipeRightIcon fontSize="small" sx={{ color: 'text.secondary', fontSize: '1rem' }} />
                 </Box>
               )}
             </Box>
             
             <IconButton
               onClick={() => setCurrentDate(addMonths(currentDate, 1))}
-              size="large"
+              size="medium"
               sx={{ 
                 bgcolor: 'rgba(255,255,255,0.8)',
                 '&:hover': { bgcolor: 'rgba(255,255,255,1)', transform: 'scale(1.1)' },
                 ml: 2,
-                width: 56,
-                height: 56,
+                width: 40,
+                height: 40,
                 boxShadow: 2,
               }}
             >
-              <ChevronRightIcon fontSize="large" />
+              <ChevronRightIcon />
             </IconButton>
           </Box>
 
@@ -374,13 +376,14 @@ const Calendar = () => {
             <Button
               onClick={() => setShowMonthStats(!showMonthStats)}
               sx={{ 
-                mb: 2, 
+                mb: 1, 
                 display: { xs: 'flex', md: 'none' },
                 justifyContent: 'space-between',
                 width: '100%',
                 textTransform: 'none',
                 color: 'primary.main',
                 fontWeight: 600,
+                py: 0.5,
               }}
               endIcon={showMonthStats ? <ExpandLessIcon /> : <ExpandMoreIcon />}
             >
@@ -388,30 +391,30 @@ const Calendar = () => {
             </Button>
             
             <Collapse in={!isMobile || showMonthStats}>
-              <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', gap: 2 }}>
+              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
                 <Chip 
                   icon={<WorkIcon />} 
                   label={`${monthStats.workDaysCount} Work Days`} 
                   color="primary" 
                   variant="outlined"
-                  size="medium"
-                  sx={{ fontSize: '0.875rem', px: 1 }}
+                  size="small"
+                  sx={{ fontSize: '0.75rem' }}
                 />
                 <Chip 
                   icon={<PaymentIcon />} 
                   label={`${formatCurrency(monthStats.totalOwed, settings.currency)} Owed`} 
                   color="warning" 
                   variant="outlined"
-                  size="medium"
-                  sx={{ fontSize: '0.875rem', px: 1 }}
+                  size="small"
+                  sx={{ fontSize: '0.75rem' }}
                 />
                 <Chip 
                   icon={<PaymentIcon />} 
                   label={`${formatCurrency(monthStats.totalPayments, settings.currency)} Paid`} 
                   color="success" 
                   variant="outlined"
-                  size="medium"
-                  sx={{ fontSize: '0.875rem', px: 1 }}
+                  size="small"
+                  sx={{ fontSize: '0.75rem' }}
                 />
               </Stack>
             </Collapse>
@@ -423,7 +426,7 @@ const Calendar = () => {
       <Fade in timeout={700}>
         <Paper 
           sx={{ 
-            p: { xs: 2, sm: 3 },
+            p: { xs: 1.5, sm: 2 },
             mb: 4,
             borderRadius: 3,
             overflow: 'hidden',
@@ -432,16 +435,16 @@ const Calendar = () => {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <Grid container spacing={{ xs: 1, sm: 1.5 }}>
+          <Grid container spacing={{ xs: 0.5, sm: 1 }}>
             {/* Weekday Headers */}
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
               <Grid item xs={12/7} key={day}>
-                <Box sx={{ p: { xs: 1, sm: 1.5 }, textAlign: 'center' }}>
+                <Box sx={{ p: { xs: 0.5, sm: 1 }, textAlign: 'center' }}>
                   <Typography 
                     variant="caption"
                     sx={{ 
                       fontWeight: 700,
-                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                      fontSize: { xs: '0.7rem', sm: '0.8rem' },
                       color: 'primary.main',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
@@ -466,118 +469,121 @@ const Calendar = () => {
               return (
                 <Grow in timeout={300 + (index * 20)} key={dateStr}>
                   <Grid item xs={12/7}>
-                    <Card
-                      elevation={isSelected ? 8 : hasEvents ? 3 : 1}
-                      onClick={() => handleDateClick(date)}
-                      sx={{
-                        height: { xs: 80, sm: 100 },
-                        cursor: 'pointer',
-                        position: 'relative',
-                        border: 2,
-                        borderColor: isToday ? 'primary.main' : 
-                                   isSelected ? 'primary.light' : 
-                                   'transparent',
-                        bgcolor: isSelected ? 'primary.light' : 
-                                 !isCurrentMonth ? 'grey.50' : 
-                                 hasEvents ? 'action.hover' :
-                                 'background.paper',
-                        opacity: isCurrentMonth ? 1 : 0.5,
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                        '&:hover': {
-                          transform: 'translateY(-3px)',
-                          boxShadow: 6,
-                          borderColor: 'primary.main',
-                        },
-                        borderRadius: 2,
-                      }}
-                    >
-                      <CardContent sx={{ 
-                        p: { xs: 1, sm: 1.5 }, 
-                        '&:last-child': { pb: { xs: 1, sm: 1.5 } },
-                        height: '100%',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
-                      }}>
-                        <Typography 
-                          variant="h6"
-                          sx={{ 
-                            fontWeight: isToday ? 800 : 600,
-                            color: isSelected ? 'primary.contrastText' : 
-                                   isToday ? 'primary.main' : 
-                                   'text.primary',
-                            fontSize: { xs: '1rem', sm: '1.125rem' },
-                            textAlign: 'center',
-                            lineHeight: 1,
-                          }}
-                        >
-                          {format(date, 'd')}
-                        </Typography>
-                        
-                        {/* Event Indicators */}
-                        {hasEvents && (
-                          <Box 
+                    <AspectRatio ratio="1">
+                      <Card
+                        elevation={isSelected ? 8 : hasEvents ? 3 : 1}
+                        onClick={() => handleDateClick(date)}
+                        sx={{
+                          cursor: 'pointer',
+                          position: 'relative',
+                          border: 2,
+                          borderColor: isToday ? 'primary.main' : 
+                                     isSelected ? 'primary.light' : 
+                                     'transparent',
+                          bgcolor: isSelected ? 'primary.light' : 
+                                   !isCurrentMonth ? 'grey.50' : 
+                                   hasEvents ? 'action.hover' :
+                                   'background.paper',
+                          opacity: isCurrentMonth ? 1 : 0.5,
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          '&:hover': {
+                            transform: 'translateY(-3px)',
+                            boxShadow: 6,
+                            borderColor: 'primary.main',
+                          },
+                          borderRadius: 2,
+                          height: '100%',
+                          width: '100%',
+                        }}
+                      >
+                        <CardContent sx={{ 
+                          p: { xs: 0.5, sm: 1 }, 
+                          '&:last-child': { pb: { xs: 0.5, sm: 1 } },
+                          height: '100%',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}>
+                          <Typography 
+                            variant="h6"
                             sx={{ 
-                              display: 'flex',
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                              gap: 0.5,
-                              flexWrap: 'wrap',
-                              mt: 0.5,
+                              fontWeight: isToday ? 800 : 600,
+                              color: isSelected ? 'primary.contrastText' : 
+                                     isToday ? 'primary.main' : 
+                                     'text.primary',
+                              fontSize: { xs: '0.875rem', sm: '1rem' },
+                              lineHeight: 1,
                             }}
                           >
-                            {totalEvents <= 3 ? (
-                              <>
-                                {dayWorkDays.slice(0, 2).map((workDay, idx) => (
-                                  <Box
-                                    key={`wd-${idx}`}
-                                    sx={{
-                                      width: { xs: 6, sm: 8 },
-                                      height: { xs: 6, sm: 8 },
-                                      borderRadius: '50%',
-                                      bgcolor: workDay.isPaid ? 'success.main' : 'warning.main',
-                                      boxShadow: 1,
-                                    }}
+                            {format(date, 'd')}
+                          </Typography>
+                          
+                          {/* Event Indicators */}
+                          {hasEvents && (
+                            <Box 
+                              sx={{ 
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                gap: 0.25,
+                                flexWrap: 'wrap',
+                              }}
+                            >
+                              {totalEvents <= 3 ? (
+                                <>
+                                  {dayWorkDays.slice(0, 2).map((workDay, idx) => (
+                                    <Box
+                                      key={`wd-${idx}`}
+                                      sx={{
+                                        width: { xs: 4, sm: 6 },
+                                        height: { xs: 4, sm: 6 },
+                                        borderRadius: '50%',
+                                        bgcolor: workDay.isPaid ? 'success.main' : 'warning.main',
+                                        boxShadow: 1,
+                                      }}
+                                    />
+                                  ))}
+                                  {dayPayments.slice(0, 1).map((payment, idx) => (
+                                    <Box
+                                      key={`p-${idx}`}
+                                      sx={{
+                                        width: { xs: 4, sm: 6 },
+                                        height: { xs: 4, sm: 6 },
+                                        borderRadius: '50%',
+                                        bgcolor: 'info.main',
+                                        boxShadow: 1,
+                                      }}
+                                    />
+                                  ))}
+                                </>
+                              ) : (
+                                <Badge 
+                                  badgeContent={totalEvents} 
+                                  color="primary"
+                                  sx={{
+                                    '& .MuiBadge-badge': {
+                                      fontSize: '0.6rem',
+                                      minWidth: 14,
+                                      height: 14,
+                                      padding: '0 2px',
+                                    }
+                                  }}
+                                >
+                                  <EventIcon 
+                                    fontSize="small" 
+                                    sx={{ 
+                                      color: 'primary.main',
+                                      fontSize: { xs: '0.875rem', sm: '1rem' }
+                                    }} 
                                   />
-                                ))}
-                                {dayPayments.slice(0, 1).map((payment, idx) => (
-                                  <Box
-                                    key={`p-${idx}`}
-                                    sx={{
-                                      width: { xs: 6, sm: 8 },
-                                      height: { xs: 6, sm: 8 },
-                                      borderRadius: '50%',
-                                      bgcolor: 'info.main',
-                                      boxShadow: 1,
-                                    }}
-                                  />
-                                ))}
-                              </>
-                            ) : (
-                              <Badge 
-                                badgeContent={totalEvents} 
-                                color="primary"
-                                sx={{
-                                  '& .MuiBadge-badge': {
-                                    fontSize: '0.6rem',
-                                    minWidth: 16,
-                                    height: 16,
-                                  }
-                                }}
-                              >
-                                <EventIcon 
-                                  fontSize="small" 
-                                  sx={{ 
-                                    color: 'primary.main',
-                                    fontSize: { xs: '1rem', sm: '1.25rem' }
-                                  }} 
-                                />
-                              </Badge>
-                            )}
-                          </Box>
-                        )}
-                      </CardContent>
-                    </Card>
+                                </Badge>
+                              )}
+                            </Box>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </AspectRatio>
                   </Grid>
                 </Grow>
               );
