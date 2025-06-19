@@ -20,6 +20,7 @@ import {
   Chip,
   Tabs,
   Tab,
+  Avatar,
 } from '@mui/material';
 import {
   BarChart,
@@ -33,9 +34,13 @@ import {
   PieChart,
   Pie,
   Cell,
+  LineChart,
+  Line,
 } from 'recharts';
 import { useApp } from '../contexts/AppContext';
 import { formatCurrency } from '../utils/currency';
+import { format } from 'date-fns';
+import { alpha } from '@mui/material/styles';
 
 const Reports = () => {
   const { employees, workDays, payments, calculateEmployeeTotals, settings } = useApp();
@@ -43,6 +48,10 @@ const Reports = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [filterPaymentMethod, setFilterPaymentMethod] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterEmployee, setFilterEmployee] = useState('all');
+  const [isMobile, setIsMobile] = useState(false);
 
   // Filter employees based on search term
   const filteredEmployees = useMemo(() => {
@@ -125,280 +134,344 @@ const Reports = () => {
 
   return (
     <Box>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Reports & Analytics
-      </Typography>
+      {/* Header Section */}
+      <Paper 
+        elevation={0}
+        sx={{ 
+          p: { xs: 2, sm: 3 },
+          mb: { xs: 2, sm: 3 },
+          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+          borderRadius: 2,
+        }}
+      >
+        <Typography 
+          variant="h4" 
+          component="h1" 
+          sx={{ 
+            fontWeight: 700,
+            fontSize: { xs: '1.5rem', sm: '2rem' },
+            mb: { xs: 1, sm: 2 },
+          }}
+        >
+          Reports & Analytics
+        </Typography>
+        <Typography 
+          variant="body1" 
+          color="text.secondary"
+          sx={{ 
+            fontSize: { xs: '0.875rem', sm: '1rem' },
+          }}
+        >
+          Track payments and analyze work patterns
+        </Typography>
+      </Paper>
 
-      {/* Overall Statistics */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      {/* Filter Controls */}
+      <Paper 
+        sx={{ 
+          p: { xs: 1.5, sm: 2 },
+          mb: { xs: 2, sm: 3 },
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: { xs: 1, sm: 2 },
+          alignItems: { xs: 'stretch', sm: 'center' },
+        }}
+      >
+        <TextField
+          select
+          label="Payment Method"
+          value={filterPaymentMethod}
+          onChange={(e) => setFilterPaymentMethod(e.target.value)}
+          sx={{ 
+            minWidth: { xs: '100%', sm: 200 },
+            '& .MuiInputBase-root': {
+              height: '40px',
+            },
+          }}
+        >
+          <MenuItem value="all">All Methods</MenuItem>
+          {paymentMethods.map((method) => (
+            <MenuItem key={method} value={method}>{method}</MenuItem>
+          ))}
+        </TextField>
+
+        <TextField
+          select
+          label="Status"
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          sx={{ 
+            minWidth: { xs: '100%', sm: 200 },
+            '& .MuiInputBase-root': {
+              height: '40px',
+            },
+          }}
+        >
+          <MenuItem value="all">All Status</MenuItem>
+          <MenuItem value="paid">Paid</MenuItem>
+          <MenuItem value="unpaid">Unpaid</MenuItem>
+        </TextField>
+
+        <TextField
+          select
+          label="Employee"
+          value={filterEmployee}
+          onChange={(e) => setFilterEmployee(e.target.value)}
+          sx={{ 
+            minWidth: { xs: '100%', sm: 200 },
+            '& .MuiInputBase-root': {
+              height: '40px',
+            },
+          }}
+        >
+          <MenuItem value="all">All Employees</MenuItem>
+          {employees.map((emp) => (
+            <MenuItem key={emp.id} value={emp.id}>{emp.name}</MenuItem>
+          ))}
+        </TextField>
+      </Paper>
+
+      {/* Stats Grid */}
+      <Grid container spacing={2} sx={{ mb: { xs: 2, sm: 3 } }}>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <StatsCard
+            title="Total Owed"
+            value={formatCurrency(overallStats.totalOwed, settings.currency)}
+            icon={<MoneyIcon />}
+            color="primary"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatsCard
+            title="Total Paid"
+            value={formatCurrency(overallStats.totalPaid, settings.currency)}
+            icon={<PaymentIcon />}
+            color="success"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatsCard
+            title="Outstanding"
+            value={formatCurrency(overallStats.outstanding, settings.currency)}
+            icon={<AccountBalanceIcon />}
+            color="warning"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatsCard
+            title="Work Days"
+            value={overallStats.totalWorkDays.toString()}
+            icon={<WorkIcon />}
+            color="info"
+          />
+        </Grid>
+      </Grid>
+
+      {/* Charts Section */}
+      <Grid container spacing={2}>
+        {/* Payment Timeline Chart */}
+        <Grid item xs={12}>
+          <Card sx={{ mb: { xs: 2, sm: 3 } }}>
             <CardContent>
-              <Typography color="text.secondary" gutterBottom>
-                Total Owed
+              <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
+                Payment Timeline
               </Typography>
-              <Typography variant="h4" component="div">
-                {formatCurrency(overallStats.totalOwed, settings.currency)}
-              </Typography>
+              <Box sx={{ height: { xs: 300, sm: 400 } }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={timelineData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="date" 
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(value) => format(new Date(value), 'MMM d')}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(value) => formatCurrency(value, settings.currency, true)}
+                    />
+                    <Tooltip 
+                      formatter={(value) => formatCurrency(value, settings.currency)}
+                      labelFormatter={(value) => format(new Date(value), 'MMMM d, yyyy')}
+                    />
+                    <Legend />
+                    <Line type="monotone" dataKey="paid" name="Paid" stroke="#4caf50" strokeWidth={2} />
+                    <Line type="monotone" dataKey="owed" name="Owed" stroke="#f57c00" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </Box>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
+
+        {/* Payment Methods Chart */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ height: '100%' }}>
             <CardContent>
-              <Typography color="text.secondary" gutterBottom>
-                Total Paid
+              <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
+                Payment Methods
               </Typography>
-              <Typography variant="h4" component="div" color="success.main">
-                {formatCurrency(overallStats.totalPaid, settings.currency)}
-              </Typography>
+              <Box sx={{ height: { xs: 300, sm: 400 } }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={paymentMethodData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => 
+                        isMobile ? 
+                        `${(percent * 100).toFixed(0)}%` : 
+                        `${name} ${(percent * 100).toFixed(0)}%`
+                      }
+                      outerRadius="80%"
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {paymentMethodData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend 
+                      layout={isMobile ? "horizontal" : "vertical"}
+                      align={isMobile ? "center" : "right"}
+                      verticalAlign={isMobile ? "bottom" : "middle"}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </Box>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
+
+        {/* Employee Performance Chart */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ height: '100%' }}>
             <CardContent>
-              <Typography color="text.secondary" gutterBottom>
-                Outstanding
+              <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
+                Employee Performance
               </Typography>
-              <Typography 
-                variant="h4" 
-                component="div"
-                color={overallStats.outstanding > 0 ? 'error.main' : 'success.main'}
-              >
-                {formatCurrency(overallStats.outstanding, settings.currency)}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Typography color="text.secondary" gutterBottom>
-                Total Work Days
-              </Typography>
-              <Typography variant="h4" component="div">
-                {overallStats.totalWorkDays}
-              </Typography>
+              <Box sx={{ height: { xs: 300, sm: 400 } }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={employeeChartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fontSize: 12 }}
+                      interval={0}
+                      angle={-45}
+                      textAnchor="end"
+                      height={60}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(value) => formatCurrency(value, settings.currency, true)}
+                    />
+                    <Tooltip 
+                      formatter={(value) => formatCurrency(value, settings.currency)}
+                    />
+                    <Legend />
+                    <Bar dataKey="owed" name="Total Owed" fill="#8884d8" />
+                    <Bar dataKey="paid" name="Total Paid" fill="#82ca9d" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </Box>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
-      {/* Filters */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                label="Search Employees"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                size="small"
-              />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Payment Method</InputLabel>
-                <Select
-                  value={paymentMethodFilter}
-                  onChange={(e) => setPaymentMethodFilter(e.target.value)}
-                  label="Payment Method"
-                >
-                  <MenuItem value="all">All Methods</MenuItem>
-                  <MenuItem value="Cash">Cash</MenuItem>
-                  <MenuItem value="Check">Check</MenuItem>
-                  <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
-                  <MenuItem value="PayPal">PayPal</MenuItem>
-                  <MenuItem value="Other">Other</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Status</InputLabel>
-                <Select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  label="Status"
-                >
-                  <MenuItem value="all">All</MenuItem>
-                  <MenuItem value="paid">Paid</MenuItem>
-                  <MenuItem value="unpaid">Unpaid</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
+      {/* Employee Table */}
+      <Card sx={{ mt: { xs: 2, sm: 3 } }}>
+        <CardContent sx={{ p: { xs: 1, sm: 2 } }}>
+          <Typography variant="h6" gutterBottom sx={{ px: { xs: 1, sm: 0 }, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
+            Employee Summary
+          </Typography>
+          <TableContainer>
+            <Table size={isMobile ? "small" : "medium"}>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Employee</TableCell>
+                  <TableCell align="right">Work Days</TableCell>
+                  <TableCell align="right">Total Owed</TableCell>
+                  <TableCell align="right">Total Paid</TableCell>
+                  <TableCell align="right">Outstanding</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {employeeSummary.map((row) => (
+                  <TableRow key={row.id}>
+                    <TableCell component="th" scope="row">
+                      {row.name}
+                    </TableCell>
+                    <TableCell align="right">{row.workDays}</TableCell>
+                    <TableCell align="right">{formatCurrency(row.totalOwed, settings.currency)}</TableCell>
+                    <TableCell align="right">{formatCurrency(row.totalPaid, settings.currency)}</TableCell>
+                    <TableCell 
+                      align="right"
+                      sx={{ 
+                        color: row.outstanding > 0 ? 'warning.main' : 
+                               row.outstanding < 0 ? 'success.main' : 
+                               'text.primary',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {formatCurrency(row.outstanding, settings.currency)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </CardContent>
       </Card>
-
-      {/* Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
-          <Tab label="Employee Overview" />
-          <Tab label="Payment Analytics" />
-          <Tab label="Monthly Trends" />
-        </Tabs>
-      </Box>
-
-      {/* Employee Overview Tab */}
-      {activeTab === 0 && (
-        <Box>
-          <Grid container spacing={3}>
-            <Grid item xs={12} lg={8}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Employee Performance
-                  </Typography>
-                  <ResponsiveContainer width="100%" height={400}>
-                    <BarChart data={employeeChartData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => formatCurrency(value, settings.currency)} />
-                      <Legend />
-                      <Bar dataKey="owed" fill="#8884d8" name="Total Owed" />
-                      <Bar dataKey="paid" fill="#82ca9d" name="Total Paid" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} lg={4}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Payment Methods
-                  </Typography>
-                  <ResponsiveContainer width="100%" height={400}>
-                    <PieChart>
-                      <Pie
-                        data={paymentMethodData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {paymentMethodData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-
-          {/* Employee Table */}
-          <Card sx={{ mt: 3 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Employee Details
-              </Typography>
-              <TableContainer component={Paper}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Employee</TableCell>
-                      <TableCell>Daily Rate</TableCell>
-                      <TableCell>Work Days</TableCell>
-                      <TableCell>Total Owed</TableCell>
-                      <TableCell>Total Paid</TableCell>
-                      <TableCell>Outstanding</TableCell>
-                      <TableCell>Status</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {filteredEmployees.map((employee) => {
-                      const totals = calculateEmployeeTotals(employee.id);
-                      const workDaysCount = workDays.filter(day => day.employeeId === employee.id).length;
-                      
-                      return (
-                        <TableRow key={employee.id}>
-                          <TableCell>{employee.name}</TableCell>
-                          <TableCell>{formatCurrency(employee.dailyRate, settings.currency)}</TableCell>
-                          <TableCell>{workDaysCount}</TableCell>
-                          <TableCell>{formatCurrency(totals.totalOwed, settings.currency)}</TableCell>
-                          <TableCell>{formatCurrency(totals.totalPaid, settings.currency)}</TableCell>
-                          <TableCell>{formatCurrency(totals.outstanding, settings.currency)}</TableCell>
-                          <TableCell>
-                            <Chip
-                              label={totals.outstanding > 0 ? 'Unpaid' : 'Paid'}
-                              color={totals.outstanding > 0 ? 'error' : 'success'}
-                              size="small"
-                            />
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </CardContent>
-          </Card>
-        </Box>
-      )}
-
-      {/* Payment Analytics Tab */}
-      {activeTab === 1 && (
-        <Box>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Payment Method Distribution
-                  </Typography>
-                  <ResponsiveContainer width="100%" height={400}>
-                    <BarChart data={paymentMethodData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="value" fill="#8884d8" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        </Box>
-      )}
-
-      {/* Monthly Trends Tab */}
-      {activeTab === 2 && (
-        <Box>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Monthly Payment Trends
-                  </Typography>
-                  <ResponsiveContainer width="100%" height={400}>
-                    <BarChart data={monthlyPaymentData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip formatter={(value, name) => [formatCurrency(value, settings.currency), 'Amount']} />
-                      <Bar dataKey="amount" fill="#82ca9d" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        </Box>
-      )}
     </Box>
   );
 };
+
+const StatsCard = ({ title, value, icon, color }) => (
+  <Card
+    sx={{
+      height: '100%',
+      background: `linear-gradient(135deg, ${alpha(`${color}.main`, 0.1)} 0%, ${alpha(`${color}.dark`, 0.1)} 100%)`,
+      border: 1,
+      borderColor: `${color}.main`,
+      borderRadius: 2,
+    }}
+  >
+    <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Avatar
+          sx={{
+            bgcolor: `${color}.main`,
+            width: { xs: 40, sm: 48 },
+            height: { xs: 40, sm: 48 },
+          }}
+        >
+          {icon}
+        </Avatar>
+        <Box>
+          <Typography 
+            variant="body2" 
+            color="text.secondary"
+            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+          >
+            {title}
+          </Typography>
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              fontWeight: 600,
+              color: `${color}.main`,
+              fontSize: { xs: '1.1rem', sm: '1.25rem' },
+            }}
+          >
+            {value}
+          </Typography>
+        </Box>
+      </Box>
+    </CardContent>
+  </Card>
+);
 
 export default Reports; 

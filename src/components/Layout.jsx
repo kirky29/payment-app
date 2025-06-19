@@ -16,6 +16,8 @@ import {
   Menu,
   MenuItem,
   IconButton,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material';
 import {
   People as PeopleIcon,
@@ -35,6 +37,8 @@ const Layout = ({ children }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { currentUser, logout } = useAuth();
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const [touchStart, setTouchStart] = React.useState(null);
+  const [touchEnd, setTouchEnd] = React.useState(null);
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -68,8 +72,45 @@ const Layout = ({ children }) => {
     navigate(routes[newValue]);
   };
 
+  // Handle swipe gestures for mobile navigation
+  const handleTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    const currentTab = getCurrentTab();
+    
+    if (isLeftSwipe && currentTab < 3) {
+      handleTabChange(null, currentTab + 1);
+    }
+    if (isRightSwipe && currentTab > 0) {
+      handleTabChange(null, currentTab - 1);
+    }
+  };
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <Box 
+      sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        minHeight: '100vh',
+        overflowX: 'hidden',
+      }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Header */}
       <AppBar 
         position="fixed" 
@@ -77,15 +118,14 @@ const Layout = ({ children }) => {
         sx={{
           background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
           borderBottom: '1px solid rgba(255,255,255,0.1)',
-          // On desktop, make header start after sidebar
           ...(isMobile ? {} : {
             ml: '240px',
             width: 'calc(100% - 240px)',
           }),
-          mt: 0, // Remove any margin above
+          zIndex: (theme) => theme.zIndex.drawer + 1,
         }}
       >
-        <Toolbar>
+        <Toolbar sx={{ minHeight: { xs: '56px', sm: '64px' } }}>
           <Typography 
             variant={isMobile ? "h6" : "h5"} 
             component="div" 
@@ -94,57 +134,57 @@ const Layout = ({ children }) => {
               fontWeight: 700,
               letterSpacing: '0.5px',
               textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+              fontSize: { xs: '1.1rem', sm: '1.25rem' },
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
             }}
           >
-            💰 Payment Tracker
+            <span role="img" aria-label="money bag">💰</span>
+            Payment Tracker
           </Typography>
           
           {/* User Menu */}
-          {currentUser && (
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Typography variant="body2" sx={{ mr: 2, color: 'rgba(255,255,255,0.8)' }}>
-                {currentUser.email}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <SyncStatus />
+            <IconButton
+              size="large"
+              onClick={handleMenu}
+              color="inherit"
+              sx={{ 
+                ml: 1,
+                bgcolor: 'rgba(255,255,255,0.1)',
+                '&:hover': {
+                  bgcolor: 'rgba(255,255,255,0.2)',
+                },
+              }}
+            >
+              <AccountIcon />
+            </IconButton>
+          </Box>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+          >
+            <MenuItem disabled>
+              <Typography variant="body2" color="textSecondary">
+                {currentUser?.email}
               </Typography>
-              <IconButton
-                size="large"
-                aria-label="account of current user"
-                aria-controls="menu-appbar"
-                aria-haspopup="true"
-                onClick={handleMenu}
-                color="inherit"
-                sx={{ 
-                  bgcolor: 'rgba(255,255,255,0.1)',
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' }
-                }}
-              >
-                <AccountIcon />
-              </IconButton>
-              <Menu
-                id="menu-appbar"
-                anchorEl={anchorEl}
-                anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'right',
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                open={Boolean(anchorEl)}
-                onClose={handleClose}
-              >
-                <MenuItem onClick={handleLogout}>
-                  <LogoutIcon sx={{ mr: 1 }} />
-                  Logout
-                </MenuItem>
-              </Menu>
-            </Box>
-          )}
+            </MenuItem>
+            <MenuItem onClick={handleLogout}>
+              <ListItemIcon>
+                <LogoutIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Logout</ListItemText>
+            </MenuItem>
+          </Menu>
         </Toolbar>
       </AppBar>
 
-      {/* Side Navigation - Desktop Only */}
+      {/* Desktop Sidebar */}
       {!isMobile && (
         <Paper 
           sx={{ 
@@ -153,7 +193,7 @@ const Layout = ({ children }) => {
             top: 0, 
             bottom: 0,
             width: 240,
-            zIndex: 1100, // Higher than AppBar to prevent overlap
+            zIndex: 1100,
             borderRadius: 0,
             borderRight: '1px solid rgba(0,0,0,0.1)',
             display: 'flex',
@@ -241,17 +281,20 @@ const Layout = ({ children }) => {
         sx={{ 
           flexGrow: 1,
           ml: isMobile ? 0 : '240px',
-          mt: '64px', // Account for fixed AppBar height
+          mt: { xs: '56px', sm: '64px' },
           transition: 'margin 0.3s',
-          minHeight: 'calc(100vh - 64px)',
+          minHeight: 'calc(100vh - 56px)',
+          '@media (min-width: 600px)': {
+            minHeight: 'calc(100vh - 64px)',
+          },
+          pb: isMobile ? '64px' : 0, // Add padding for bottom navigation
         }}
       >
         <Container 
           maxWidth="xl" 
           sx={{ 
-            py: { xs: 2, sm: 3, md: 4 },
-            px: { xs: 2, sm: 3, md: 4 },
-            pb: isMobile ? 8 : 4,
+            py: { xs: 2, sm: 3 },
+            px: { xs: 1.5, sm: 3 },
           }}
         >
           <Box sx={{ 
@@ -273,40 +316,67 @@ const Layout = ({ children }) => {
             right: 0,
             zIndex: 1000,
             borderTop: '1px solid rgba(0,0,0,0.1)',
-            mt: '64px', // Push below fixed AppBar
+            background: '#fff',
+            boxShadow: '0 -2px 8px rgba(0,0,0,0.1)',
           }} 
-          elevation={8}
+          elevation={3}
         >
           <BottomNavigation
             value={getCurrentTab()}
             onChange={handleTabChange}
             showLabels
             sx={{
+              height: 56,
               '& .MuiBottomNavigationAction-root': {
                 minWidth: 'auto',
-                padding: '6px 12px 8px',
+                padding: '6px 8px',
+                '&.Mui-selected': {
+                  paddingTop: '6px',
+                },
               },
               '& .MuiBottomNavigationAction-label': {
-                fontSize: '0.75rem',
-                fontWeight: 500,
+                fontSize: '0.7rem',
+                '&.Mui-selected': {
+                  fontSize: '0.75rem',
+                },
               },
             }}
           >
             <BottomNavigationAction
               label="Employees"
               icon={<PeopleIcon />}
+              sx={{
+                '& .MuiSvgIcon-root': {
+                  fontSize: '1.4rem',
+                },
+              }}
             />
             <BottomNavigationAction
               label="Calendar"
               icon={<CalendarIcon />}
+              sx={{
+                '& .MuiSvgIcon-root': {
+                  fontSize: '1.4rem',
+                },
+              }}
             />
             <BottomNavigationAction
               label="Reports"
               icon={<ReportsIcon />}
+              sx={{
+                '& .MuiSvgIcon-root': {
+                  fontSize: '1.4rem',
+                },
+              }}
             />
             <BottomNavigationAction
               label="Settings"
               icon={<SettingsIcon />}
+              sx={{
+                '& .MuiSvgIcon-root': {
+                  fontSize: '1.4rem',
+                },
+              }}
             />
           </BottomNavigation>
         </Paper>

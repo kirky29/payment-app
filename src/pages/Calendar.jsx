@@ -30,6 +30,7 @@ import {
   MenuItem,
   ToggleButton,
   ToggleButtonGroup,
+  Stack,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -48,7 +49,7 @@ import {
   ChevronRight as ChevronRightIcon,
 } from '@mui/icons-material';
 import { useApp } from '../contexts/AppContext';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, isSameMonth, startOfWeek, endOfWeek } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, isSameMonth, startOfWeek, endOfWeek, addMonths, subMonths } from 'date-fns';
 import { formatCurrency, getCurrencySymbol } from '../utils/currency';
 
 const Calendar = () => {
@@ -92,8 +93,9 @@ const Calendar = () => {
   // Add new state for view mode
   const [viewMode, setViewMode] = useState('month'); // 'month', 'week', or 'list'
 
-  // Add touch start position for swipe detection
-  const [touchStart, setTouchStart] = useState(null);
+  // Add touch handling for month navigation
+  const [touchStart, setTouchStart] = React.useState(null);
+  const [touchEnd, setTouchEnd] = React.useState(null);
 
   const getInitials = (name) => {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '';
@@ -272,22 +274,28 @@ const Calendar = () => {
     }
   };
 
-  // Handle touch events for swipe navigation
   const handleTouchStart = (e) => {
+    setTouchEnd(null);
     setTouchStart(e.touches[0].clientX);
   };
 
-  const handleTouchEnd = (e) => {
-    if (!touchStart) return;
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
     
-    const touchEnd = e.changedTouches[0].clientX;
-    const diff = touchStart - touchEnd;
-    
-    if (Math.abs(diff) > 50) { // minimum swipe distance
-      navigateMonth(diff > 0 ? 1 : -1);
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      setCurrentDate(addMonths(currentDate, 1));
     }
-    
-    setTouchStart(null);
+    if (isRightSwipe) {
+      setCurrentDate(addMonths(currentDate, -1));
+    }
   };
 
   // Add new function to handle marking a work day as paid
@@ -514,343 +522,284 @@ const Calendar = () => {
 
   return (
     <Box>
-      {/* Header Section with View Mode Toggle */}
+      {/* Header Section */}
       <Paper 
         elevation={0}
         sx={{ 
-          p: { xs: 2, sm: 3, md: 4 },
-          mb: 4,
+          p: { xs: 2, sm: 3 },
+          mb: { xs: 2, sm: 3 },
           background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-          borderRadius: 3,
+          borderRadius: 2,
         }}
       >
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          flexWrap: 'wrap', 
-          gap: 2,
-          mb: 2 
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <IconButton onClick={() => navigateMonth(-1)}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+          <Box>
+            <Typography 
+              variant="h4" 
+              component="h1" 
+              sx={{ 
+                fontWeight: 700,
+                fontSize: { xs: '1.5rem', sm: '2rem' },
+                mb: { xs: 0.5, sm: 1 },
+              }}
+            >
+              Work Calendar
+            </Typography>
+            <Typography 
+              variant="body1" 
+              color="text.secondary"
+              sx={{ 
+                fontSize: { xs: '0.875rem', sm: '1rem' },
+              }}
+            >
+              Track work days and payments
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <IconButton
+              onClick={() => setCurrentDate(subMonths(currentDate, 1))}
+              sx={{ 
+                bgcolor: 'background.paper',
+                boxShadow: 1,
+                '&:hover': { bgcolor: 'grey.100' },
+              }}
+            >
               <ChevronLeftIcon />
             </IconButton>
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              {format(currentDate, 'MMMM yyyy')}
-            </Typography>
-            <IconButton onClick={() => navigateMonth(1)}>
+            <Button
+              variant="outlined"
+              onClick={() => setCurrentDate(new Date())}
+              sx={{
+                minWidth: { xs: 'auto', sm: '120px' },
+                px: { xs: 1, sm: 2 },
+              }}
+            >
+              Today
+            </Button>
+            <IconButton
+              onClick={() => setCurrentDate(addMonths(currentDate, 1))}
+              sx={{ 
+                bgcolor: 'background.paper',
+                boxShadow: 1,
+                '&:hover': { bgcolor: 'grey.100' },
+              }}
+            >
               <ChevronRightIcon />
             </IconButton>
           </Box>
-          <ToggleButtonGroup
-            value={viewMode}
-            exclusive
-            onChange={handleViewModeChange}
-            aria-label="view mode"
-            size="small"
-          >
-            <ToggleButton value="month" aria-label="month view">
-              <ViewModuleIcon />
-            </ToggleButton>
-            <ToggleButton value="week" aria-label="week view">
-              <ViewWeekIcon />
-            </ToggleButton>
-            <ToggleButton value="list" aria-label="list view">
-              <ViewListIcon />
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </Box>
-        <Box sx={{ mt: 2, display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-          <Chip label={`Work Days: ${monthStats.workDaysCount}`} color="primary" icon={<WorkIcon />} />
-          <Chip label={`Total Owed: ${formatCurrency(monthStats.totalOwed, settings.currency)}`} color="warning" icon={<TrendingUpIcon />} />
-          <Chip label={`Total Paid: ${formatCurrency(monthStats.totalPayments, settings.currency)}`} color="success" icon={<PaymentIcon />} />
         </Box>
       </Paper>
 
-      {/* Calendar View based on viewMode */}
-      <Box
+      {/* Calendar Grid */}
+      <Paper 
+        sx={{ 
+          p: { xs: 1, sm: 2 },
+          mb: { xs: 2, sm: 3 },
+          overflowX: 'hidden',
+        }}
         onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {viewMode === 'list' ? (
-          // List View
-          <Paper sx={{ p: 2, borderRadius: 3 }}>
-            {getDays().map(date => {
-              const { workDays: dayWorkDays } = getEventsForDate(date);
-              return dayWorkDays.length > 0 && (
-                <Box key={date.toISOString()} sx={{ mb: 3 }}>
-                  <Typography variant="h6" sx={{ mb: 2 }}>
-                    {format(date, 'EEEE, do MMMM yyyy')}
-                  </Typography>
-                  {dayWorkDays.map(workDay => (
-                    <WorkDayCard
-                      key={workDay.id}
-                      workDay={workDay}
-                      employee={getEmployeeById(workDay.employeeId)}
-                    />
-                  ))}
-                </Box>
-              );
-            })}
-          </Paper>
-        ) : (
-          // Grid View (Month or Week)
-          <Paper sx={{ p: { xs: 1, sm: 2 }, borderRadius: 3 }}>
-            <Box sx={{ 
-              display: { xs: 'none', sm: 'grid' }, 
-              gridTemplateColumns: 'repeat(7, 1fr)', 
-              mb: 1 
-            }}>
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
-                <Typography key={day} align="center" variant="subtitle2" color="text.secondary">
-                  {day}
-                </Typography>
-              ))}
-            </Box>
-            <Box sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: viewMode === 'week' ? 'repeat(7, 1fr)' : 'repeat(2, 1fr)',
-                sm: viewMode === 'week' ? 'repeat(7, 1fr)' : 'repeat(4, 1fr)',
-                md: 'repeat(7, 1fr)'
-              },
-              gap: 1,
-            }}>
-              {getDays().map(date => {
-                const { workDays: dayWorkDays } = getEventsForDate(date);
-                const isPaid = dayWorkDays.length > 0 && dayWorkDays.every(wd => wd.isPaid);
-                const isUnpaid = dayWorkDays.length > 0 && dayWorkDays.some(wd => !wd.isPaid);
-                const isCurrentDay = isToday(date);
-                
-                return (
-                  <Paper
-                    key={date.toISOString()}
-                    elevation={isCurrentDay ? 6 : 1}
-                    sx={{
-                      p: 1,
-                      minHeight: viewMode === 'week' ? 120 : 90,
-                      border: isCurrentDay ? '2px solid #1976d2' : '1px solid #e0e0e0',
-                      background: isPaid 
-                        ? 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)'
-                        : isUnpaid 
-                          ? 'linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)'
-                          : 'white',
-                      position: 'relative',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: 6,
-                      },
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'flex-start',
-                    }}
-                    onClick={() => handleDateClick(date)}
-                  >
-                    <Box sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: 0.5, 
-                      mb: 0.5,
-                      width: '100%',
-                      justifyContent: 'center' 
-                    }}>
-                      <Typography 
-                        variant={viewMode === 'week' ? 'h6' : 'subtitle2'} 
-                        sx={{ fontWeight: 700 }}
-                      >
-                        {format(date, viewMode === 'week' ? 'EEE d' : 'd')}
-                      </Typography>
-                      {isCurrentDay && (
-                        <Chip label="Today" color="info" size="small" sx={{ ml: 0.5 }} />
-                      )}
-                    </Box>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      gap: 0.5, 
-                      flexWrap: 'wrap', 
-                      justifyContent: 'center', 
-                      mb: 0.5 
-                    }}>
-                      {dayWorkDays.map(wd => {
-                        const emp = getEmployeeById(wd.employeeId);
-                        return (
-                          <Avatar
-                            key={wd.id}
-                            sx={{ 
-                              width: viewMode === 'week' ? 32 : 24, 
-                              height: viewMode === 'week' ? 32 : 24, 
-                              fontSize: viewMode === 'week' ? 14 : 12,
-                              bgcolor: wd.isPaid ? 'success.main' : 'warning.main'
-                            }}
-                            title={emp?.name || ''}
-                          >
-                            {emp ? getInitials(emp.name) : '?'}
-                          </Avatar>
-                        );
-                      })}
-                    </Box>
-                    {viewMode === 'week' && dayWorkDays.length > 0 && (
-                      <Box sx={{ mt: 'auto', width: '100%' }}>
-                        <Typography variant="caption" align="center" display="block">
-                          {dayWorkDays.length} work day{dayWorkDays.length !== 1 ? 's' : ''}
-                        </Typography>
-                      </Box>
-                    )}
-                  </Paper>
-                );
-              })}
-            </Box>
-          </Paper>
-        )}
-      </Box>
+        <Box sx={{ mb: 2 }}>
+          <Typography 
+            variant="h5" 
+            sx={{ 
+              textAlign: 'center',
+              fontWeight: 600,
+              fontSize: { xs: '1.25rem', sm: '1.5rem' },
+            }}
+          >
+            {format(currentDate, 'MMMM yyyy')}
+          </Typography>
+        </Box>
 
-      {/* Floating Action Button */}
-      <Box sx={{ position: 'fixed', bottom: 80, right: 16, zIndex: 1200 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={() => setOpenWorkDayDialog(true)}
-          sx={{
-            borderRadius: '50%',
-            minWidth: 56,
-            minHeight: 56,
-            boxShadow: 4,
-            fontSize: 0,
-            p: 0,
-            background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
-            },
-          }}
-          aria-label="Add Work Day"
-        >
-          <AddIcon fontSize="large" />
-        </Button>
-      </Box>
+        <Grid container spacing={1}>
+          {/* Weekday Headers */}
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+            <Grid item xs={12/7} key={day}>
+              <Typography 
+                align="center" 
+                sx={{ 
+                  fontWeight: 600,
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                  color: 'text.secondary',
+                }}
+              >
+                {isSmallMobile ? day.charAt(0) : day}
+              </Typography>
+            </Grid>
+          ))}
 
-      {/* Selected Date Details */}
-      {selectedDate && (
-        <Paper 
-          sx={{ 
-            p: { xs: 2, sm: 3 }, 
-            borderRadius: 3,
-            mt: 3,
-            maxWidth: '100%',
-            mx: 'auto'
-          }}
-        >
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            mb: 3,
-            flexWrap: 'wrap',
-            gap: 2
-          }}>
-            <Typography variant="h5" sx={{ fontWeight: 600 }}>
-              {format(selectedDate, 'EEEE, do MMMM yyyy')}
-            </Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setOpenWorkDayDialog(true)}
-            >
-              Add Work Day
-            </Button>
-          </Box>
-          
-          {(() => {
-            const events = getEventsForDate(selectedDate);
-            const hasEvents = events.workDays.length > 0 || events.payments.length > 0;
-            
-            if (!hasEvents) {
-              return (
-                <Box sx={{ 
-                  textAlign: 'center', 
-                  py: 6,
-                  px: 2,
-                  bgcolor: 'background.paper',
-                  borderRadius: 2,
-                  border: '1px dashed',
-                  borderColor: 'divider'
-                }}>
-                  <CalendarIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
-                    No events for this date
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                    Add work days or payments to track activities
-                  </Typography>
-                </Box>
-              );
-            }
+          {/* Calendar Days */}
+          {getDaysInMonth().map((date, index) => {
+            const dateStr = format(date, 'yyyy-MM-dd');
+            const isToday = isSameDay(date, new Date());
+            const isSelected = selectedDate && isSameDay(date, selectedDate);
+            const { workDays, payments } = getEventsForDate(date);
+            const hasEvents = workDays.length > 0 || payments.length > 0;
 
             return (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {events.workDays.length > 0 && (
-                  <Box>
-                    <Typography variant="h6" sx={{ mb: 2, color: 'text.secondary' }}>
-                      Work Days ({events.workDays.length})
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      {events.workDays.map(workDay => (
-                        <WorkDayCard
+              <Grid item xs={12/7} key={dateStr}>
+                <Paper
+                  elevation={isSelected ? 8 : hasEvents ? 2 : 0}
+                  onClick={() => handleDateClick(date)}
+                  sx={{
+                    p: { xs: 0.5, sm: 1 },
+                    height: { xs: 60, sm: 80 },
+                    cursor: 'pointer',
+                    position: 'relative',
+                    borderRadius: 1,
+                    border: 1,
+                    borderColor: isToday ? 'primary.main' : 'transparent',
+                    bgcolor: isSelected ? 'primary.light' : 'background.paper',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: 3,
+                    },
+                  }}
+                >
+                  <Typography 
+                    align="center"
+                    sx={{ 
+                      fontWeight: isToday ? 700 : 400,
+                      color: isSelected ? 'primary.contrastText' : 'text.primary',
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
+                    }}
+                  >
+                    {format(date, 'd')}
+                  </Typography>
+                  
+                  {/* Event Indicators */}
+                  {hasEvents && (
+                    <Box 
+                      sx={{ 
+                        position: 'absolute',
+                        bottom: { xs: 2, sm: 4 },
+                        left: 0,
+                        right: 0,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        gap: 0.5,
+                      }}
+                    >
+                      {workDays.map((workDay) => (
+                        <Box
                           key={workDay.id}
-                          workDay={workDay}
-                          employee={getEmployeeById(workDay.employeeId)}
+                          sx={{
+                            width: { xs: 4, sm: 6 },
+                            height: { xs: 4, sm: 6 },
+                            borderRadius: '50%',
+                            bgcolor: workDay.isPaid ? 'success.main' : 'warning.main',
+                          }}
+                        />
+                      ))}
+                      {payments.map((payment) => (
+                        <Box
+                          key={payment.id}
+                          sx={{
+                            width: { xs: 4, sm: 6 },
+                            height: { xs: 4, sm: 6 },
+                            borderRadius: '50%',
+                            bgcolor: 'primary.main',
+                          }}
                         />
                       ))}
                     </Box>
-                  </Box>
-                )}
-
-                {events.payments.length > 0 && (
-                  <Box>
-                    <Typography variant="h6" sx={{ mb: 2, color: 'text.secondary' }}>
-                      Payments ({events.payments.length})
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      {events.payments.map(payment => (
-                        <Paper
-                          key={payment.id}
-                          sx={{
-                            p: 2,
-                            borderRadius: 2,
-                            border: '1px solid',
-                            borderColor: 'success.light',
-                            background: 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)',
-                          }}
-                        >
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                              {getEmployeeById(payment.employeeId)?.name}
-                            </Typography>
-                            <Typography variant="h6" color="success.dark">
-                              {formatCurrency(payment.amount, settings.currency)}
-                            </Typography>
-                          </Box>
-                          {payment.notes && (
-                            <Typography variant="body2" color="text.secondary">
-                              {payment.notes}
-                            </Typography>
-                          )}
-                        </Paper>
-                      ))}
-                    </Box>
-                  </Box>
-                )}
-              </Box>
+                  )}
+                </Paper>
+              </Grid>
             );
-          })()}
+          })}
+        </Grid>
+      </Paper>
+
+      {/* Event List for Selected Date */}
+      {selectedDate && (
+        <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              {format(selectedDate, 'MMMM d, yyyy')}
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant="contained"
+                startIcon={<WorkIcon />}
+                onClick={() => setOpenWorkDayDialog(true)}
+                size={isSmallMobile ? "small" : "medium"}
+              >
+                Add Work Day
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<PaymentIcon />}
+                onClick={() => setOpenPaymentDialog(true)}
+                size={isSmallMobile ? "small" : "medium"}
+              >
+                Add Payment
+              </Button>
+            </Box>
+          </Box>
+
+          {/* Work Days */}
+          {workDays.length > 0 && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+                Work Days
+              </Typography>
+              <Stack spacing={1}>
+                {workDays.map((workDay) => (
+                  <WorkDayCard
+                    key={workDay.id}
+                    workDay={workDay}
+                    employee={getEmployeeById(workDay.employeeId)}
+                    onEdit={() => handleEditWorkDay(workDay)}
+                    onDelete={() => handleDeleteWorkDay(workDay)}
+                    onTogglePaid={() => handleToggleWorkDayPaid(workDay)}
+                  />
+                ))}
+              </Stack>
+            </Box>
+          )}
+
+          {/* Payments */}
+          {payments.length > 0 && (
+            <Box>
+              <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+                Payments
+              </Typography>
+              <Stack spacing={1}>
+                {payments.map((payment) => (
+                  <PaymentCard
+                    key={payment.id}
+                    payment={payment}
+                    employee={getEmployeeById(payment.employeeId)}
+                    onEdit={() => handleEditPayment(payment)}
+                    onDelete={() => handleDeletePayment(payment)}
+                  />
+                ))}
+              </Stack>
+            </Box>
+          )}
+
+          {workDays.length === 0 && payments.length === 0 && (
+            <Box 
+              sx={{ 
+                textAlign: 'center',
+                py: 4,
+                color: 'text.secondary',
+              }}
+            >
+              <Typography variant="body1">
+                No events for this date
+              </Typography>
+            </Box>
+          )}
         </Paper>
       )}
 
-      {/* Add/Edit Work Day Dialog */}
+      {/* Dialogs */}
       <Dialog open={openWorkDayDialog} onClose={() => setOpenWorkDayDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ pb: 1 }}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -930,7 +879,6 @@ const Calendar = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Add/Edit Payment Dialog */}
       <Dialog open={openPaymentDialog} onClose={() => setOpenPaymentDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ pb: 1 }}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
