@@ -26,8 +26,8 @@ import {
   Fade,
   Badge,
   Divider,
-  AspectRatio,
 } from '@mui/material';
+import { AspectRatio } from '@mui/joy';
 import {
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
