@@ -776,15 +776,28 @@ const Calendar = () => {
                                 }
                               />
                               <ListItemSecondaryAction>
-                                <Button
-                                  size="small"
-                                  variant="outlined"
-                                  color={workDay.isPaid ? "success" : "warning"}
-                                  onClick={() => workDay.isPaid ? unmarkWorkDayAsPaid(workDay.id) : markWorkDayAsPaid(workDay.id)}
-                                  startIcon={workDay.isPaid ? <CheckCircleIcon /> : <WarningIcon />}
-                                >
-                                  {workDay.isPaid ? 'Paid' : 'Mark Paid'}
-                                </Button>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    color={workDay.isPaid ? "success" : "warning"}
+                                    onClick={() => workDay.isPaid ? unmarkWorkDayAsPaid(workDay.id) : markWorkDayAsPaid(workDay.id)}
+                                    startIcon={workDay.isPaid ? <CheckCircleIcon /> : <WarningIcon />}
+                                    disabled={!workDay.isPaid && new Date(workDay.date) > new Date()}
+                                    title={!workDay.isPaid && new Date(workDay.date) > new Date() ? "Cannot mark future days as paid" : ""}
+                                  >
+                                    {workDay.isPaid ? 'Paid' : 'Mark Paid'}
+                                  </Button>
+                                  {!workDay.isPaid && new Date(workDay.date) > new Date() && (
+                                    <Typography 
+                                      variant="caption" 
+                                      color="text.secondary" 
+                                      sx={{ mt: 0.5, fontSize: '0.7rem' }}
+                                    >
+                                      Future date
+                                    </Typography>
+                                  )}
+                                </Box>
                               </ListItemSecondaryAction>
                             </ListItem>
                           );
@@ -980,6 +993,8 @@ const Calendar = () => {
               fullWidth
               InputLabelProps={{ shrink: true }}
               size="medium"
+              error={new Date(paymentForm.date) > new Date()}
+              helperText={new Date(paymentForm.date) > new Date() ? "Cannot add payments for future dates" : ""}
             />
             <TextField
               type="number"
@@ -1026,7 +1041,13 @@ const Calendar = () => {
           <Button onClick={() => setOpenPaymentDialog(false)} size="large">
             Cancel
           </Button>
-          <Button onClick={handleSubmitPayment} variant="contained" color="success" size="large">
+          <Button 
+            onClick={handleSubmitPayment} 
+            variant="contained" 
+            color="success" 
+            size="large"
+            disabled={!paymentForm.employeeId || !paymentForm.date || !paymentForm.amount || new Date(paymentForm.date) > new Date()}
+          >
             Add Payment
           </Button>
         </DialogActions>
