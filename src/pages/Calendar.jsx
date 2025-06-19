@@ -449,7 +449,6 @@ const Calendar = () => {
     try {
       await addWorkDay(workDayData);
       setOpenWorkDayDialog(false);
-      
       if (navigator.vibrate) {
         navigator.vibrate([100, 50, 100]);
       }
@@ -472,7 +471,6 @@ const Calendar = () => {
     try {
       await addPayment(paymentData);
       setOpenPaymentDialog(false);
-      
       if (navigator.vibrate) {
         navigator.vibrate([100, 50, 100]);
       }
@@ -664,44 +662,6 @@ const Calendar = () => {
           })}
         </Grid>
       </Box>
-
-      {/* Floating Action Buttons */}
-      <Zoom in={true}>
-        <Box
-          sx={{
-            position: 'fixed',
-            bottom: isMobile ? 80 : 24,
-            right: 24,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2,
-            zIndex: 1000,
-          }}
-        >
-          <Fab
-            color="primary"
-            aria-label="add work day"
-            onClick={handleAddWorkDay}
-            sx={{
-              bgcolor: 'warning.main',
-              '&:hover': { bgcolor: 'warning.dark' },
-            }}
-          >
-            <WorkIcon />
-          </Fab>
-          <Fab
-            color="primary"
-            aria-label="add payment"
-            onClick={handleAddPayment}
-            sx={{
-              bgcolor: 'success.main',
-              '&:hover': { bgcolor: 'success.dark' },
-            }}
-          >
-            <PaymentIcon />
-          </Fab>
-        </Box>
-      </Zoom>
 
       {/* Full Screen Day Details */}
       {selectedDate && (
