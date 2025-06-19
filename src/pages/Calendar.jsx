@@ -251,348 +251,250 @@ const Calendar = () => {
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
+    <Box sx={{ 
+      width: '100%', 
+      height: '100vh', 
+      maxWidth: '100%', 
+      overflow: 'hidden',
+      bgcolor: 'background.default',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
       {/* Header Section */}
-      <Grow in timeout={500}>
-        <Paper 
-          elevation={0}
-          sx={{ 
-            p: { xs: 1, sm: 1.5 },
-            mb: { xs: 0.5, sm: 1 },
-            background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
-            borderRadius: { xs: 0, sm: 2 },
-            width: '100%',
-          }}
-        >
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-            <Box>
-              <Typography 
-                variant="h5" 
-                component="h1" 
-                sx={{ 
-                  fontWeight: 600,
-                  fontSize: { xs: '1rem', sm: '1.2rem' },
-                  color: 'primary.main',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-              >
-                <EventIcon sx={{ mr: 0.5, fontSize: { xs: '1rem', sm: '1.2rem' } }} />
-                Work Calendar
-              </Typography>
-              <Typography 
-                variant="body2" 
-                color="text.secondary"
-                sx={{ 
-                  fontSize: { xs: '0.7rem', sm: '0.8rem' },
-                }}
-              >
-                Track work days and payments
-              </Typography>
-            </Box>
-            {!isMobile && (
-              <Button
-                variant="contained"
-                size="medium"
-                startIcon={<TodayIcon />}
-                onClick={() => setCurrentDate(new Date())}
-                sx={{
-                  background: 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)',
-                  boxShadow: '0 4px 15px rgba(33, 150, 243, 0.3)',
-                  px: 2,
-                  py: 1,
-                  fontSize: '0.875rem',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 6px 20px rgba(33, 150, 243, 0.4)',
-                  },
-                  transition: 'all 0.3s ease',
-                }}
-              >
-                Back to Today
-              </Button>
-            )}
-          </Box>
-
-          {/* Month Navigation */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 2 }}>
-            <IconButton
-              onClick={() => setCurrentDate(subMonths(currentDate, 1))}
-              size="medium"
-              sx={{ 
-                bgcolor: 'rgba(255,255,255,0.8)',
-                '&:hover': { bgcolor: 'rgba(255,255,255,1)', transform: 'scale(1.1)' },
-                mr: 2,
-                width: 40,
-                height: 40,
-                boxShadow: 2,
-              }}
-            >
-              <ChevronLeftIcon />
-            </IconButton>
-            
-            <Box sx={{ textAlign: 'center', minWidth: 180 }}>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  fontWeight: 600,
-                  fontSize: { xs: '1.25rem', sm: '1.5rem' },
-                  color: 'primary.main',
-                  mb: 0.5,
-                }}
-              >
-                {format(currentDate, 'MMMM yyyy')}
-              </Typography>
-              {isMobile && (
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-                  <SwipeLeftIcon fontSize="small" sx={{ color: 'text.secondary', fontSize: '1rem' }} />
-                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                    Swipe to navigate
-                  </Typography>
-                  <SwipeRightIcon fontSize="small" sx={{ color: 'text.secondary', fontSize: '1rem' }} />
-                </Box>
-              )}
-            </Box>
-            
-            <IconButton
-              onClick={() => setCurrentDate(addMonths(currentDate, 1))}
-              size="medium"
-              sx={{ 
-                bgcolor: 'rgba(255,255,255,0.8)',
-                '&:hover': { bgcolor: 'rgba(255,255,255,1)', transform: 'scale(1.1)' },
-                ml: 2,
-                width: 40,
-                height: 40,
-                boxShadow: 2,
-              }}
-            >
-              <ChevronRightIcon />
-            </IconButton>
-          </Box>
-
-          {/* Month Stats - Collapsible on Mobile */}
-          <Box>
-            <Button
-              onClick={() => setShowMonthStats(!showMonthStats)}
-              sx={{ 
-                mb: 1, 
-                display: { xs: 'flex', md: 'none' },
-                justifyContent: 'space-between',
-                width: '100%',
-                textTransform: 'none',
-                color: 'primary.main',
-                fontWeight: 600,
-                py: 0.5,
-              }}
-              endIcon={showMonthStats ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            >
-              Month Statistics
-            </Button>
-            
-            <Collapse in={!isMobile || showMonthStats}>
-              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-                <Chip 
-                  icon={<WorkIcon />} 
-                  label={`${monthStats.workDaysCount} Work Days`} 
-                  color="primary" 
-                  variant="outlined"
-                  size="small"
-                  sx={{ fontSize: '0.75rem' }}
-                />
-                <Chip 
-                  icon={<PaymentIcon />} 
-                  label={`${formatCurrency(monthStats.totalOwed, settings.currency)} Owed`} 
-                  color="warning" 
-                  variant="outlined"
-                  size="small"
-                  sx={{ fontSize: '0.75rem' }}
-                />
-                <Chip 
-                  icon={<PaymentIcon />} 
-                  label={`${formatCurrency(monthStats.totalPayments, settings.currency)} Paid`} 
-                  color="success" 
-                  variant="outlined"
-                  size="small"
-                  sx={{ fontSize: '0.75rem' }}
-                />
-              </Stack>
-            </Collapse>
-          </Box>
-        </Paper>
-      </Grow>
-
-      {/* Calendar Grid */}
-      <Fade in timeout={700}>
-        <Paper 
-          sx={{ 
-            p: { xs: 0, sm: 0.5 },
-            mb: 0,
-            borderRadius: { xs: 0, sm: 2 },
-            overflow: 'hidden',
-            width: '100%',
-            maxWidth: '100%',
-            boxShadow: { xs: 0, sm: 1 },
-          }}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          <Grid 
-            container 
-            spacing={0}
+      <Box 
+        sx={{ 
+          px: 2,
+          py: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: 1,
+          borderColor: 'divider',
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Typography 
+            variant="h4" 
+            component="h1" 
             sx={{ 
-              width: '100%',
-              margin: 0,
+              fontWeight: 500,
+              fontSize: { xs: '2rem', sm: '2.4rem' },
+              color: 'text.primary',
+              mr: 1,
             }}
           >
-            {/* Weekday Headers */}
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <Grid item xs={12/7} key={day} sx={{ p: 0 }}>
-                <Box sx={{ 
-                  p: { xs: 0.25, sm: 0.5 }, 
-                  textAlign: 'center',
+            {format(currentDate, 'MMMM')}
+          </Typography>
+          <Typography 
+            variant="h5" 
+            sx={{ 
+              fontWeight: 400,
+              fontSize: { xs: '1.5rem', sm: '1.8rem' },
+              color: 'text.secondary',
+            }}
+          >
+            {format(currentDate, 'yyyy')}
+          </Typography>
+        </Box>
+        {!isMobile && (
+          <Button
+            variant="text"
+            onClick={() => setCurrentDate(new Date())}
+            sx={{
+              color: 'primary.main',
+              '&:hover': {
+                backgroundColor: 'transparent',
+                textDecoration: 'underline',
+              },
+            }}
+          >
+            Today
+          </Button>
+        )}
+      </Box>
+
+      {/* Calendar Grid */}
+      <Box 
+        sx={{ 
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* Weekday Headers */}
+        <Grid 
+          container 
+          sx={{ 
+            borderBottom: 1,
+            borderColor: 'divider',
+            py: 0.5,
+          }}
+        >
+          {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day) => (
+            <Grid 
+              item 
+              xs={12/7} 
+              key={day}
+              sx={{ 
+                textAlign: 'center',
+              }}
+            >
+              <Typography 
+                sx={{ 
+                  fontSize: { xs: '0.75rem', sm: '0.85rem' },
+                  color: 'text.secondary',
+                  fontWeight: 400,
+                }}
+              >
+                {day}
+              </Typography>
+            </Grid>
+          ))}
+        </Grid>
+
+        {/* Calendar Days */}
+        <Grid 
+          container 
+          sx={{ 
+            flex: 1,
+            minHeight: 0,
+          }}
+        >
+          {getDaysInMonth().map((date, index) => {
+            const dateStr = format(date, 'yyyy-MM-dd');
+            const isToday = isSameDay(date, new Date());
+            const isSelected = selectedDate && isSameDay(date, selectedDate);
+            const isCurrentMonth = date.getMonth() === currentDate.getMonth();
+            const { workDays: dayWorkDays, payments: dayPayments } = getEventsForDate(date);
+            const hasEvents = dayWorkDays.length > 0 || dayPayments.length > 0;
+
+            return (
+              <Grid 
+                item 
+                xs={12/7} 
+                key={dateStr}
+                sx={{ 
+                  borderRight: 1,
                   borderBottom: 1,
                   borderColor: 'divider',
-                }}>
-                  <Typography 
-                    variant="caption"
-                    sx={{ 
-                      fontWeight: 600,
-                      fontSize: { xs: '0.6rem', sm: '0.7rem' },
-                      color: 'primary.main',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                    }}
-                  >
-                    {isSmallMobile ? day.charAt(0) : day.slice(0, 3)}
-                  </Typography>
-                </Box>
-              </Grid>
-            ))}
-
-            {/* Calendar Days */}
-            {getDaysInMonth().map((date, index) => {
-              const dateStr = format(date, 'yyyy-MM-dd');
-              const isToday = isSameDay(date, new Date());
-              const isSelected = selectedDate && isSameDay(date, selectedDate);
-              const isCurrentMonth = date.getMonth() === currentDate.getMonth();
-              const { workDays: dayWorkDays, payments: dayPayments } = getEventsForDate(date);
-              const hasEvents = dayWorkDays.length > 0 || dayPayments.length > 0;
-              const totalEvents = dayWorkDays.length + dayPayments.length;
-
-              return (
-                <Grid 
-                  item 
-                  xs={12/7} 
-                  key={dateStr}
-                  sx={{ 
-                    p: 0,
-                    borderRight: 1,
-                    borderBottom: 1,
-                    borderColor: 'divider',
-                    '&:nth-of-type(7n)': {
-                      borderRight: 0,
+                  position: 'relative',
+                  minHeight: { xs: 80, sm: 100 },
+                }}
+              >
+                <Box
+                  onClick={() => handleDateClick(date)}
+                  sx={{
+                    height: '100%',
+                    p: 1,
+                    cursor: 'pointer',
+                    bgcolor: isSelected ? 'action.selected' : 'transparent',
+                    '&:hover': {
+                      bgcolor: 'action.hover',
                     },
                   }}
                 >
-                  <Box
-                    onClick={() => handleDateClick(date)}
-                    sx={{
-                      height: { xs: 60, sm: 80 },
-                      cursor: 'pointer',
-                      bgcolor: isSelected ? 'primary.light' : 
-                               !isCurrentMonth ? 'grey.50' : 
-                               hasEvents ? 'action.hover' :
-                               'background.paper',
-                      opacity: isCurrentMonth ? 1 : 0.5,
-                      transition: 'all 0.2s',
-                      position: 'relative',
-                      '&:hover': {
-                        bgcolor: 'action.hover',
-                      },
-                      ...(isToday && {
-                        '&::after': {
-                          content: '""',
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          height: '2px',
-                          bgcolor: 'primary.main',
-                        }
-                      })
+                  <Typography 
+                    sx={{ 
+                      fontSize: { xs: '0.9rem', sm: '1rem' },
+                      fontWeight: isToday ? 600 : isCurrentMonth ? 400 : 300,
+                      color: !isCurrentMonth ? 'text.disabled' : 
+                             isToday ? 'primary.main' : 'text.primary',
+                      mb: 0.5,
                     }}
                   >
-                    <Box sx={{ p: 0.5 }}>
-                      <Typography 
-                        sx={{ 
-                          fontWeight: isToday ? 700 : 400,
-                          color: isSelected ? 'primary.main' : 
-                                 isToday ? 'primary.main' : 
-                                 'text.primary',
-                          fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                        }}
-                      >
-                        {format(date, 'd')}
-                      </Typography>
-                      
-                      {/* Event Indicators */}
-                      {hasEvents && (
-                        <Box 
-                          sx={{ 
-                            display: 'flex',
-                            gap: 0.25,
-                            mt: 0.25,
-                            flexWrap: 'wrap',
+                    {format(date, 'd')}
+                  </Typography>
+                  
+                  {/* Events */}
+                  <Stack spacing={0.5}>
+                    {dayWorkDays.map((workDay, idx) => {
+                      const employee = getEmployeeById(workDay.employeeId);
+                      return (
+                        <Box
+                          key={`wd-${idx}`}
+                          sx={{
+                            bgcolor: workDay.isPaid ? 'success.light' : 'warning.light',
+                            color: workDay.isPaid ? 'success.dark' : 'warning.dark',
+                            p: 0.5,
+                            borderRadius: 0.5,
+                            fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
                           }}
                         >
-                          {totalEvents <= 3 ? (
-                            <>
-                              {dayWorkDays.slice(0, 2).map((workDay, idx) => (
-                                <Box
-                                  key={`wd-${idx}`}
-                                  sx={{
-                                    width: 3,
-                                    height: 3,
-                                    borderRadius: '50%',
-                                    bgcolor: workDay.isPaid ? 'success.main' : 'warning.main',
-                                  }}
-                                />
-                              ))}
-                              {dayPayments.slice(0, 1).map((payment, idx) => (
-                                <Box
-                                  key={`p-${idx}`}
-                                  sx={{
-                                    width: 3,
-                                    height: 3,
-                                    borderRadius: '50%',
-                                    bgcolor: 'info.main',
-                                  }}
-                                />
-                              ))}
-                            </>
-                          ) : (
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                fontSize: '0.6rem',
-                                color: 'text.secondary',
-                              }}
-                            >
-                              {totalEvents} events
-                            </Typography>
-                          )}
+                          {employee?.name || 'Work Day'}
                         </Box>
-                      )}
-                    </Box>
-                  </Box>
-                </Grid>
-              );
-            })}
-          </Grid>
-        </Paper>
-      </Fade>
+                      );
+                    })}
+                    {dayPayments.map((payment, idx) => {
+                      const employee = getEmployeeById(payment.employeeId);
+                      return (
+                        <Box
+                          key={`p-${idx}`}
+                          sx={{
+                            bgcolor: 'info.light',
+                            color: 'info.dark',
+                            p: 0.5,
+                            borderRadius: 0.5,
+                            fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {`${employee?.name || 'Payment'} - ${formatCurrency(payment.amount, settings.currency)}`}
+                        </Box>
+                      );
+                    })}
+                  </Stack>
+                </Box>
+              </Grid>
+            );
+          })}
+        </Grid>
+      </Box>
+
+      {/* Action Buttons - Fixed at bottom */}
+      <Box 
+        sx={{ 
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 1,
+        }}
+      >
+        <Fab
+          color="primary"
+          onClick={handleAddWorkDay}
+          sx={{
+            boxShadow: 3,
+            '&:hover': {
+              boxShadow: 6,
+            },
+          }}
+        >
+          <WorkIcon />
+        </Fab>
+        <Fab
+          color="secondary"
+          onClick={handleAddPayment}
+          sx={{
+            boxShadow: 3,
+            '&:hover': {
+              boxShadow: 6,
+            },
+          }}
+        >
+          <PaymentIcon />
+        </Fab>
+      </Box>
 
       {/* Selected Date Details */}
       {selectedDate && (
@@ -753,48 +655,6 @@ const Calendar = () => {
             })()}
           </Paper>
         </Slide>
-      )}
-
-      {/* Floating Action Buttons */}
-      {isMobile && (
-        <Box sx={{ position: 'fixed', bottom: 80, right: 16, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <Slide direction="up" in timeout={600}>
-            <Fab
-              color="primary"
-              onClick={handleAddWorkDay}
-              sx={{ 
-                bgcolor: 'warning.main', 
-                '&:hover': { 
-                  bgcolor: 'warning.dark',
-                  transform: 'scale(1.1)',
-                },
-                width: 56,
-                height: 56,
-                boxShadow: 4,
-                transition: 'all 0.3s ease',
-              }}
-            >
-              <WorkIcon sx={{ fontSize: '1.5rem' }} />
-            </Fab>
-          </Slide>
-          <Slide direction="up" in timeout={700}>
-            <Fab
-              color="success"
-              onClick={handleAddPayment}
-              sx={{
-                '&:hover': {
-                  transform: 'scale(1.1)',
-                },
-                width: 56,
-                height: 56,
-                boxShadow: 4,
-                transition: 'all 0.3s ease',
-              }}
-            >
-              <PaymentIcon sx={{ fontSize: '1.5rem' }} />
-            </Fab>
-          </Slide>
-        </Box>
       )}
 
       {/* Work Day Dialog */}
