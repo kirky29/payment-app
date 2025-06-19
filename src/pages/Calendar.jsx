@@ -27,7 +27,6 @@ import {
   Badge,
   Divider,
 } from '@mui/material';
-import { AspectRatio, CssVarsProvider as JoyProvider } from '@mui/joy';
 import {
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
@@ -469,123 +468,131 @@ const Calendar = () => {
               return (
                 <Grow in timeout={300 + (index * 20)} key={dateStr}>
                   <Grid item xs={12/7}>
-                    <JoyProvider>
-                      <AspectRatio ratio="1">
-                        <Card
-                          elevation={isSelected ? 8 : hasEvents ? 3 : 1}
-                          onClick={() => handleDateClick(date)}
-                          sx={{
-                            cursor: 'pointer',
-                            position: 'relative',
-                            border: 2,
-                            borderColor: isToday ? 'primary.main' : 
-                                       isSelected ? 'primary.light' : 
-                                       'transparent',
-                            bgcolor: isSelected ? 'primary.light' : 
-                                     !isCurrentMonth ? 'grey.50' : 
-                                     hasEvents ? 'action.hover' :
-                                     'background.paper',
-                            opacity: isCurrentMonth ? 1 : 0.5,
-                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                            '&:hover': {
-                              transform: 'translateY(-3px)',
-                              boxShadow: 6,
-                              borderColor: 'primary.main',
-                            },
-                            borderRadius: 2,
-                            height: '100%',
-                            width: '100%',
-                          }}
-                        >
-                          <CardContent sx={{ 
-                            p: { xs: 0.5, sm: 1 }, 
-                            '&:last-child': { pb: { xs: 0.5, sm: 1 } },
-                            height: '100%',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                          }}>
-                            <Typography 
-                              variant="h6"
+                    <Box
+                      sx={{
+                        position: 'relative',
+                        paddingTop: '100%', // This creates a square aspect ratio
+                        width: '100%',
+                      }}
+                    >
+                      <Card
+                        elevation={isSelected ? 8 : hasEvents ? 3 : 1}
+                        onClick={() => handleDateClick(date)}
+                        sx={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          cursor: 'pointer',
+                          border: 2,
+                          borderColor: isToday ? 'primary.main' : 
+                                     isSelected ? 'primary.light' : 
+                                     'transparent',
+                          bgcolor: isSelected ? 'primary.light' : 
+                                   !isCurrentMonth ? 'grey.50' : 
+                                   hasEvents ? 'action.hover' :
+                                   'background.paper',
+                          opacity: isCurrentMonth ? 1 : 0.5,
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          '&:hover': {
+                            transform: 'translateY(-3px)',
+                            boxShadow: 6,
+                            borderColor: 'primary.main',
+                          },
+                          borderRadius: 2,
+                          display: 'flex',
+                          flexDirection: 'column',
+                        }}
+                      >
+                        <CardContent sx={{ 
+                          p: { xs: 0.5, sm: 1 }, 
+                          '&:last-child': { pb: { xs: 0.5, sm: 1 } },
+                          height: '100%',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}>
+                          <Typography 
+                            variant="h6"
+                            sx={{ 
+                              fontWeight: isToday ? 800 : 600,
+                              color: isSelected ? 'primary.contrastText' : 
+                                     isToday ? 'primary.main' : 
+                                     'text.primary',
+                              fontSize: { xs: '0.875rem', sm: '1rem' },
+                              lineHeight: 1,
+                            }}
+                          >
+                            {format(date, 'd')}
+                          </Typography>
+                          
+                          {/* Event Indicators */}
+                          {hasEvents && (
+                            <Box 
                               sx={{ 
-                                fontWeight: isToday ? 800 : 600,
-                                color: isSelected ? 'primary.contrastText' : 
-                                       isToday ? 'primary.main' : 
-                                       'text.primary',
-                                fontSize: { xs: '0.875rem', sm: '1rem' },
-                                lineHeight: 1,
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                gap: 0.25,
+                                flexWrap: 'wrap',
                               }}
                             >
-                              {format(date, 'd')}
-                            </Typography>
-                            
-                            {/* Event Indicators */}
-                            {hasEvents && (
-                              <Box 
-                                sx={{ 
-                                  display: 'flex',
-                                  justifyContent: 'center',
-                                  alignItems: 'center',
-                                  gap: 0.25,
-                                  flexWrap: 'wrap',
-                                }}
-                              >
-                                {totalEvents <= 3 ? (
-                                  <>
-                                    {dayWorkDays.slice(0, 2).map((workDay, idx) => (
-                                      <Box
-                                        key={`wd-${idx}`}
-                                        sx={{
-                                          width: { xs: 4, sm: 6 },
-                                          height: { xs: 4, sm: 6 },
-                                          borderRadius: '50%',
-                                          bgcolor: workDay.isPaid ? 'success.main' : 'warning.main',
-                                          boxShadow: 1,
-                                        }}
-                                      />
-                                    ))}
-                                    {dayPayments.slice(0, 1).map((payment, idx) => (
-                                      <Box
-                                        key={`p-${idx}`}
-                                        sx={{
-                                          width: { xs: 4, sm: 6 },
-                                          height: { xs: 4, sm: 6 },
-                                          borderRadius: '50%',
-                                          bgcolor: 'info.main',
-                                          boxShadow: 1,
-                                        }}
-                                      />
-                                    ))}
-                                  </>
-                                ) : (
-                                  <Badge 
-                                    badgeContent={totalEvents} 
-                                    color="primary"
-                                    sx={{
-                                      '& .MuiBadge-badge': {
-                                        fontSize: '0.6rem',
-                                        minWidth: 14,
-                                        height: 14,
-                                        padding: '0 2px',
-                                      }
-                                    }}
-                                  >
-                                    <EventIcon 
-                                      fontSize="small" 
-                                      sx={{ 
-                                        color: 'primary.main',
-                                        fontSize: { xs: '0.875rem', sm: '1rem' }
-                                      }} 
+                              {totalEvents <= 3 ? (
+                                <>
+                                  {dayWorkDays.slice(0, 2).map((workDay, idx) => (
+                                    <Box
+                                      key={`wd-${idx}`}
+                                      sx={{
+                                        width: { xs: 4, sm: 6 },
+                                        height: { xs: 4, sm: 6 },
+                                        borderRadius: '50%',
+                                        bgcolor: workDay.isPaid ? 'success.main' : 'warning.main',
+                                        boxShadow: 1,
+                                      }}
                                     />
-                                  </Badge>
-                                )}
-                              </Box>
-                            )}
-                          </CardContent>
-                        </Card>
-                      </AspectRatio>
-                    </JoyProvider>
+                                  ))}
+                                  {dayPayments.slice(0, 1).map((payment, idx) => (
+                                    <Box
+                                      key={`p-${idx}`}
+                                      sx={{
+                                        width: { xs: 4, sm: 6 },
+                                        height: { xs: 4, sm: 6 },
+                                        borderRadius: '50%',
+                                        bgcolor: 'info.main',
+                                        boxShadow: 1,
+                                      }}
+                                    />
+                                  ))}
+                                </>
+                              ) : (
+                                <Badge 
+                                  badgeContent={totalEvents} 
+                                  color="primary"
+                                  sx={{
+                                    '& .MuiBadge-badge': {
+                                      fontSize: '0.6rem',
+                                      minWidth: 14,
+                                      height: 14,
+                                      padding: '0 2px',
+                                    }
+                                  }}
+                                >
+                                  <EventIcon 
+                                    fontSize="small" 
+                                    sx={{ 
+                                      color: 'primary.main',
+                                      fontSize: { xs: '0.875rem', sm: '1rem' }
+                                    }} 
+                                  />
+                                </Badge>
+                              )}
+                            </Box>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </Box>
                   </Grid>
                 </Grow>
               );
